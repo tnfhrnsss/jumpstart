@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Jumpstart — Help</title>
+    <style>
+      :root {
+        --bg: #16181d;
+        --panel: #1e2128;
+        --panel2: #23262e;
+        --border: #2e323c;
+        --text: #e6e8ec;
+        --muted: #8b909a;
+        --accent: #d97757;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font:
+          13.5px/1.65 -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        padding: 22px 26px 40px;
+      }
+      h1 {
+        font-size: 19px;
+        margin: 0 0 4px;
+      }
+      .sub {
+        color: var(--muted);
+        margin-bottom: 18px;
+      }
+      h2 {
+        font-size: 15px;
+        margin: 26px 0 8px;
+        padding-top: 14px;
+        border-top: 1px solid var(--border);
+      }
+      h3 {
+        font-size: 13.5px;
+        margin: 14px 0 4px;
+        color: var(--accent);
+      }
+      p,
+      li {
+        color: #d3d7de;
+      }
+      ul {
+        margin: 4px 0 10px;
+        padding-left: 20px;
+      }
+      li {
+        margin-bottom: 4px;
+      }
+      code {
+        font-family: ui-monospace, Menlo, monospace;
+        font-size: 0.86em;
+        background: var(--panel2);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 1px 5px;
+      }
+      a {
+        color: var(--accent);
+      }
+      .toc {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 14px;
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        font-size: 12.5px;
+      }
+      .q {
+        font-weight: 600;
+        color: var(--text);
+        margin: 12px 0 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>⚡ Jumpstart Help</h1>
+    <div class="sub">
+      Repetitive terminal tasks in one click — how to use & FAQ
+    </div>
+    <div class="toc">
+      <a href="#usage">How to use</a>
+      <a href="#faq">FAQ</a>
+    </div>
+
+    <h2 id="usage">How to use</h2>
+
+    <h3>Quick Run (Favorites)</h3>
+    <p>
+      A favorites list of items you run often. It starts empty; press the
+      <b>⭐ button</b> on any item in
+      <b>My Workflows · Claude Code Directories · Frequent Folders</b> below to
+      add it here. Remove with the <b>✕</b> next to an item.
+    </p>
+
+    <h3>My Workflows</h3>
+    <ul>
+      <li>
+        Register a <b>Name / Path / Command</b>; the [Run] button opens a new
+        terminal at that path and runs the command.
+      </li>
+      <li>Leave the command empty to just open a <b>shell</b> at that path.</li>
+      <li>
+        e.g. Name <code>Start service</code> · Path
+        <code>~/Documents/myproject</code> · Command <code>npm run start</code>
+      </li>
+    </ul>
+
+    <h3>Claude Code Directories</h3>
+    <ul>
+      <li>
+        Scans <code>~/.claude/projects/</code> and lists folders where you used
+        Claude Code, most recent first.
+      </li>
+      <li>
+        Each row has [Shell] / [Continue] / [Resume…] / [Finder] shortcuts plus
+        git info (repo, branch, last commit, push status).
+      </li>
+      <li>
+        <b>Continue</b> resumes the most recent session (<code>claude -c</code
+        >); <b>Resume…</b> shows a session list in the terminal to
+        <b>pick from</b> (<code>claude --resume</code>).
+      </li>
+      <li>
+        Use the <b>search box</b> on the right to filter by path or repo name.
+      </li>
+      <li>
+        Folders that were moved/deleted show <b>"missing"</b>; hide them with
+        the <b>✕</b> button, and restore via <b>"Show all"</b> at the bottom.
+      </li>
+    </ul>
+
+    <h3>Frequent Folders</h3>
+    <p>
+      Combines folders you frequently <code>cd</code> into in your real terminal
+      (from shell history) with folders opened from this app, showing the most
+      visited. Open them directly with [Shell] / [claude -c] / [Finder].
+    </p>
+
+    <h3>Settings (top-right ⚙)</h3>
+    <ul>
+      <li><b>Language</b> — switch Korean / English instantly.</li>
+      <li><b>Theme</b> — 7 themes, instant preview.</li>
+      <li>
+        <b>Terminal app</b> — Terminal (default), iTerm2, Tabby, or Custom
+        (kitty, WezTerm, etc. via a command template).
+      </li>
+      <li>
+        <b>Open in</b> — New window / New tab. New tab is supported only by
+        Terminal & iTerm2 (see FAQ).
+      </li>
+      <li>
+        (Quick Run is populated with the ⭐ button in each list, not in
+        settings.)
+      </li>
+    </ul>
+
+    <h3>Collapse / expand sections</h3>
+    <p>
+      Use the <b>▾ / ▸ arrow</b> in each section header (or click the header) to
+      collapse or expand a section. The count badge stays visible when
+      collapsed, and the state is remembered across restarts — handy when lists
+      get long.
+    </p>
+
+    <h2 id="faq">FAQ</h2>
+
+    <div class="q">The terminal won't open.</div>
+    <p>
+      On first run macOS asks for <b>permission to control Terminal</b> → you
+      must <b>Allow</b> it. If you denied it: System Settings → Privacy &
+      Security → <b>Automation</b> → Jumpstart → check Terminal.
+    </p>
+
+    <div class="q">It doesn't open in a "new tab".</div>
+    <ul>
+      <li>
+        New tab works only with <b>Terminal & iTerm2</b>. Tabby and Custom
+        ignore the option and open as before.
+      </li>
+      <li>
+        <b>Terminal</b>'s new tab sends a Cmd+T keystroke, so it needs
+        <b>Accessibility permission</b> on first use: System Settings → Privacy
+        & Security → Accessibility → allow Jumpstart.
+      </li>
+      <li>If no window is open, it opens a new window instead of a tab.</li>
+    </ul>
+
+    <div class="q">A folder shows as "missing".</div>
+    <p>
+      That folder was moved or deleted (its path is still in history). Hide it
+      with
+      <b>✕</b> if you don't need it; restore with "Show all" at the bottom.
+    </p>
+
+    <div class="q">Where are settings / bookmarks / history stored?</div>
+    <p>
+      Not in the project — in your user folder (<code
+        >~/Library/Application Support/jumpstart/</code
+      >) as JSON. To move to another Mac, copy those files.
+    </p>
+
+    <div class="q">How is "Frequent Folders" computed?</div>
+    <p>
+      It replays <code>cd</code> entries in <code>~/.zsh_history</code> in
+      order, counts only folders that actually exist, and merges that with
+      folders opened from this app. If there's no timestamp, the "last" time is
+      omitted.
+    </p>
+
+    <div class="q">Is dev mode different from the installed app?</div>
+    <p>
+      Yes. <code>npm start</code> is dev mode (runs while the terminal is open);
+      the real app is <code>/Applications/Jumpstart.app</code>. Rebuild &
+      reinstall to reflect code changes in the installed app.
+    </p>
+
+    <div class="q">I downloaded it on another Mac and it won't open.</div>
+    <p>
+      It's unsigned (personal use), so Gatekeeper blocks it.
+      <b>Right-click → Open</b> on <code>Jumpstart.app</code> (once), or run
+      <code>xattr -dr com.apple.quarantine /Applications/Jumpstart.app</code>.
+    </p>
+
+    <p style="margin-top: 22px; color: var(--muted)">
+      Questions or bugs? Open a ticket on
+      <a
+        href="https://github.com/tnfhrnsss/jumpstart/issues"
+        target="_blank"
+        rel="noopener noreferrer"
+        >GitHub Issues</a
+      >.
+    </p>
+  </body>
+</html>

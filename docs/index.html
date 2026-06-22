@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Jumpstart — 반복 업무를 클릭 한 번으로</title>
+    <meta
+      name="description"
+      content="반복 업무를 클릭 한 번으로 실행하는 macOS 데스크탑 런처. 터미널 워크플로우 + Claude Code 디렉토리 대시보드."
+    />
+    <style>
+      :root {
+        --bg: #16181d;
+        --panel: #1e2128;
+        --panel2: #23262e;
+        --border: #2e323c;
+        --text: #e6e8ec;
+        --muted: #8b909a;
+        --accent: #d97757;
+        --accent-dim: #3a2a23;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        font:
+          15px/1.65 -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        -webkit-font-smoothing: antialiased;
+      }
+      a {
+        color: var(--accent);
+      }
+      .wrap {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 0 22px;
+      }
+      code {
+        font-family: ui-monospace, Menlo, monospace;
+        font-size: 0.86em;
+        background: var(--panel2);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 1px 6px;
+      }
+
+      /* hero */
+      .hero {
+        text-align: center;
+        padding: 76px 0 56px;
+        background: radial-gradient(
+          900px 400px at 50% -10%,
+          rgba(217, 119, 87, 0.16),
+          transparent 70%
+        );
+      }
+      .logo {
+        width: 104px;
+        height: 104px;
+        margin: 0 auto 22px;
+        filter: drop-shadow(0 12px 30px rgba(217, 119, 87, 0.28));
+      }
+      .hero h1 {
+        font-size: 44px;
+        margin: 0 0 10px;
+        letter-spacing: -0.5px;
+      }
+      .hero p {
+        font-size: 18px;
+        color: var(--muted);
+        margin: 0 auto 28px;
+        max-width: 540px;
+      }
+      .btns {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .btn {
+        display: inline-block;
+        padding: 11px 22px;
+        border-radius: 9px;
+        font-size: 15px;
+        font-weight: 600;
+        text-decoration: none;
+        border: 1px solid var(--border);
+        color: var(--text);
+        background: var(--panel2);
+      }
+      .btn.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #1b1410;
+      }
+      .btn:hover {
+        border-color: var(--accent);
+      }
+
+      /* sections */
+      section {
+        padding: 44px 0;
+        border-top: 1px solid var(--border);
+      }
+      h2 {
+        font-size: 22px;
+        margin: 0 0 22px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 14px;
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 18px;
+      }
+      .card .ic {
+        font-size: 22px;
+        margin-bottom: 8px;
+      }
+      .card h3 {
+        font-size: 15px;
+        margin: 0 0 5px;
+      }
+      .card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13.5px;
+      }
+
+      /* install */
+      pre {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px 18px;
+        overflow-x: auto;
+        font-family: ui-monospace, Menlo, monospace;
+        font-size: 13.5px;
+        line-height: 1.7;
+      }
+      pre code {
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: inherit;
+      }
+      .note {
+        background: var(--accent-dim);
+        border: 1px solid #5a3a2c;
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-size: 13.5px;
+        color: #e8c3b2;
+        margin-top: 16px;
+      }
+      ol.steps {
+        padding-left: 20px;
+      }
+      ol.steps li {
+        margin-bottom: 6px;
+      }
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 28px 0 56px;
+        color: var(--muted);
+        font-size: 13px;
+        text-align: center;
+      }
+      footer a {
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="wrap">
+        <svg
+          class="logo"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 1024 1024"
+          aria-label="Jumpstart"
+        >
+          <defs>
+            <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#F0A07A" />
+              <stop offset="0.55" stop-color="#D97757" />
+              <stop offset="1" stop-color="#B8503A" />
+            </linearGradient>
+            <linearGradient id="bolt" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#FFFFFF" />
+              <stop offset="1" stop-color="#FFE9DF" />
+            </linearGradient>
+          </defs>
+          <rect
+            x="32"
+            y="32"
+            width="960"
+            height="960"
+            rx="232"
+            fill="url(#bg)"
+          />
+          <rect
+            x="32"
+            y="32"
+            width="960"
+            height="480"
+            rx="232"
+            fill="#FFFFFF"
+            opacity="0.06"
+          />
+          <g transform="translate(250,212) scale(1.17)">
+            <path
+              fill="url(#bolt)"
+              d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.5 35.3S31.1 288 44.5 288l99.7 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.5-35.3s-17.2-20.7-30.6-20.7l-99.7 0L349.4 44.6z"
+            />
+          </g>
+        </svg>
+        <h1>⚡ Jumpstart</h1>
+        <p>
+          반복 업무를 클릭 한 번으로 — 터미널 워크플로우 런처 + Claude Code
+          디렉토리 대시보드 (macOS)
+        </p>
+        <div class="btns">
+          <a
+            class="btn primary"
+            href="https://github.com/tnfhrnsss/jumpstart/releases/latest"
+            target="_blank"
+            rel="noopener noreferrer"
+            >다운로드 (macOS)</a
+          >
+          <a class="btn" href="#install">소스에서 빌드</a>
+          <a
+            class="btn"
+            href="https://github.com/tnfhrnsss/jumpstart"
+            target="_blank"
+            rel="noopener noreferrer"
+            >GitHub에서 보기</a
+          >
+        </div>
+      </div>
+    </header>
+
+    <section>
+      <div class="wrap">
+        <h2>주요 기능</h2>
+        <div class="grid">
+          <div class="card">
+            <div class="ic">⚡</div>
+            <h3>빠른 실행</h3>
+            <p>
+              워크플로우·Claude 디렉토리·자주 여는 곳에서 ⭐로 추가한 즐겨찾기를
+              원클릭 실행.
+            </p>
+          </div>
+          <div class="card">
+            <div class="ic">📌</div>
+            <h3>내 워크플로우</h3>
+            <p>
+              "이름 · 경로 · 명령"을 등록해 두면 버튼 하나로 새 터미널에서 실행.
+            </p>
+          </div>
+          <div class="card">
+            <div class="ic">🗂️</div>
+            <h3>Claude Code 대시보드</h3>
+            <p>
+              <code>~/.claude/projects</code> 를 스캔해 작업 폴더별 셸 · 세션
+              이어가기/선택(<code>claude --resume</code>) · Finder 바로가기.
+              경로·리포 검색과 숨김 지원.
+            </p>
+          </div>
+          <div class="card">
+            <div class="ic">📂</div>
+            <h3>자주 여는 곳</h3>
+            <p>
+              터미널에서 자주 <code>cd</code> 한 폴더(셸 히스토리)와 앱 실행
+              기록을 합쳐 자주 가는 곳을 모아 표시.
+            </p>
+          </div>
+          <div class="card">
+            <div class="ic">🔀</div>
+            <h3>git 정보</h3>
+            <p>
+              폴더별 리포 주소 · 브랜치 · 마지막 커밋 · 푸시 여부 표시. (URL
+              토큰은 자동 제거)
+            </p>
+          </div>
+          <div class="card">
+            <div class="ic">🎨</div>
+            <h3>테마 7종</h3>
+            <p>
+              Charcoal · Ocean · Forest · Plum · Nord · Sand · Light. 즉시
+              미리보기.
+            </p>
+          </div>
+          <div class="card">
+            <div class="ic">🖥️</div>
+            <h3>터미널 선택</h3>
+            <p>
+              기본 Terminal · iTerm2 · Tabby, 그 외 터미널은 커스텀 명령으로.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="download">
+      <div class="wrap">
+        <h2>다운로드해서 바로 쓰기</h2>
+        <p style="color: var(--muted); margin-top: -8px">
+          요구 환경: <b>macOS 전용</b> (Apple Silicon·Intel) · Java·Node 등
+          <b>별도 설치 불필요</b> — 받아서 바로 실행됩니다.
+        </p>
+        <ol class="steps">
+          <li>
+            <a
+              href="https://github.com/tnfhrnsss/jumpstart/releases/latest"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Releases</a
+            >
+            에서 최신 <code>.dmg</code>(또는 <code>.zip</code>) 받기
+          </li>
+          <li>
+            dmg는 열어서 <code>Jumpstart.app</code>을
+            <code>Applications</code>로 드래그 (zip은 풀어서 옮기기)
+          </li>
+        </ol>
+        <div class="note">
+          ⚠️ 코드 서명이 없어(개인용) 첫 실행 때 “확인되지 않은 개발자” 경고가
+          뜰 수 있습니다 → <code>Jumpstart.app</code> <b>우클릭 → 열기</b>(최초
+          1회), 또는
+          <code>xattr -dr com.apple.quarantine /Applications/Jumpstart.app</code
+          >.
+        </div>
+      </div>
+    </section>
+
+    <section id="install">
+      <div class="wrap">
+        <h2>소스에서 빌드하기 (개발자용)</h2>
+        <p style="color: var(--muted); margin-top: -8px">
+          필요 환경: <b>macOS</b> · <b>Node.js 18+</b> (<a
+            href="https://nodejs.org"
+            target="_blank"
+            rel="noopener noreferrer"
+            >nodejs.org</a
+          >
+          또는 <code>brew install node</code>)
+        </p>
+        <pre><code># 1. 내려받기
+git clone https://github.com/tnfhrnsss/jumpstart.git
+cd jumpstart
+
+# 2. 의존성 설치 + 앱 빌드·설치
+npm install
+npm run app      # → /Applications/Jumpstart.app 설치</code></pre>
+        <p>
+          이제 Launchpad · Spotlight · Finder에서 <b>“Jumpstart”</b>를 클릭해
+          실행하세요.
+        </p>
+        <div class="note">
+          ⚠️ 첫 실행 시 macOS가 <b>“Terminal 제어 권한”</b>을 물어봅니다 →
+          <b>허용</b> (안 그러면 터미널 실행이 막힙니다). 다른 맥으로
+          <code>.app</code>만 복사했을 때 “확인되지 않은 개발자” 경고가 뜨면,
+          우클릭 → 열기 또는
+          <code>xattr -dr com.apple.quarantine /Applications/Jumpstart.app</code
+          >.
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>업데이트</h2>
+        <ol class="steps">
+          <li><code>git pull</code> 로 최신 코드 받기</li>
+          <li><code>npm run app</code> 다시 실행 → 설치본 갱신</li>
+        </ol>
+      </div>
+    </section>
+
+    <footer>
+      <div class="wrap">
+        Made by <b>jj</b> ·
+        <a
+          href="https://github.com/tnfhrnsss/jumpstart"
+          target="_blank"
+          rel="noopener noreferrer"
+          >github.com/tnfhrnsss/jumpstart</a
+        >
+      </div>
+    </footer>
+  </body>
+</html>

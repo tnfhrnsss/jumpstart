@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>About Jumpstart</title>
+    <style>
+      :root {
+        --bg: #16181d;
+        --panel2: #23262e;
+        --border: #2e323c;
+        --text: #e6e8ec;
+        --muted: #8b909a;
+        --accent: #d97757;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font:
+          13px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 26px 22px;
+        -webkit-font-smoothing: antialiased;
+        user-select: none;
+      }
+      .logo {
+        font-size: 46px;
+        line-height: 1;
+        margin-bottom: 10px;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0;
+        letter-spacing: 0.2px;
+      }
+      .ver {
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 3px;
+        font-family: ui-monospace, Menlo, monospace;
+      }
+      .copy {
+        margin-top: 18px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      /* 이름(jj)만 또렷하게 — 다른 글꼴 + 크게 + 강조색 */
+      .holder {
+        font-family: "Georgia", "Times New Roman", serif;
+        font-style: italic;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--accent);
+        letter-spacing: 0.5px;
+      }
+      .links {
+        margin-top: 16px;
+        display: flex;
+        gap: 8px;
+      }
+      .links a {
+        color: var(--text);
+        text-decoration: none;
+        font-size: 12px;
+        border: 1px solid var(--border);
+        background: var(--panel2);
+        border-radius: 6px;
+        padding: 5px 12px;
+      }
+      .links a:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="logo">⚡</div>
+    <h1>Jumpstart</h1>
+    <div class="ver" id="ver"></div>
+    <div class="copy">
+      Copyright © <span id="year"></span>
+      <span class="holder" id="holder">jj</span>
+    </div>
+    <div class="links">
+      <a id="license" href="#">MIT License</a>
+      <a id="github" href="#">GitHub</a>
+    </div>
+    <script>
+      const q = new URLSearchParams(location.search);
+      const v = q.get("v");
+      const holder = q.get("holder") || "jj";
+      const gh = (q.get("gh") || "").replace(/\/$/, "");
+      document.getElementById("ver").textContent = v ? "v" + v : "";
+      document.getElementById("year").textContent = new Date().getFullYear();
+      document.getElementById("holder").textContent = holder;
+      const lic = document.getElementById("license");
+      const git = document.getElementById("github");
+      if (gh) {
+        lic.href = gh + "/blob/main/LICENSE";
+        git.href = gh;
+        // 새 창(기본 브라우저)으로 열기 — main 의 setWindowOpenHandler가 처리
+        lic.target = "_blank";
+        git.target = "_blank";
+      } else {
+        lic.style.display = git.style.display = "none";
+      }
+    </script>
+  </body>
+</html>

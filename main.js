@@ -5,6 +5,7 @@ const {
   shell,
   nativeImage,
   Menu,
+  Tray,
 } = require("electron");
 const path = require("path");
 const fs = require("fs");
@@ -794,6 +795,75 @@ function defaultBookmarks() {
 // ── 윈도우 ──────────────────────────────────────────────
 const ICON_PATH = path.join(__dirname, "assets", "icon.png");
 
+let mainWindow = null;
+let tray = null;
+
+// 메인 창 표시(없으면 생성)
+function showMainWindow() {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.show();
+    mainWindow.focus();
+  } else {
+    createWindow();
+  }
+}
+
+// 메뉴바(트레이) 메뉴: Claude Code 디렉토리를 골라 바로 세션 시작
+function buildTrayMenu() {
+  const ko = getSettings().lang !== "en";
+  const items = [];
+  let projects = [];
+  try {
+    projects = scanClaudeProjects().projects.slice(0, 8);
+  } catch {}
+  items.push({
+    label: ko ? "Claude Code 세션 시작" : "Start Claude Code session",
+    enabled: false,
+  });
+  if (projects.length === 0) {
+    items.push({ label: ko ? "  기록 없음" : "  no history", enabled: false });
+  } else {
+    for (const p of projects) {
+      items.push({
+        label: path.basename(p.realPath) || p.realPath,
+        sublabel: p.realPath,
+        click: () => launch(p.realPath, "claude -c", `claude (${p.realPath})`),
+      });
+    }
+  }
+  const favs = getQuickFavorites();
+  if (favs.length) {
+    items.push({ type: "separator" });
+    items.push({ label: ko ? "빠른 실행" : "Quick Run", enabled: false });
+    for (const f of favs) {
+      items.push({
+        label: f.name,
+        click: () => launch(f.dir, f.cmd, f.name),
+      });
+    }
+  }
+  items.push({ type: "separator" });
+  items.push({
+    label: ko ? "Jumpstart 창 열기" : "Open Jumpstart",
+    click: showMainWindow,
+  });
+  items.push({ role: "quit", label: ko ? "종료" : "Quit" });
+  return Menu.buildFromTemplate(items);
+}
+
+function createTray() {
+  if (tray) return;
+  const img = nativeImage
+    .createFromPath(ICON_PATH)
+    .resize({ width: 18, height: 18, quality: "best" });
+  tray = new Tray(img);
+  tray.setToolTip("Jumpstart");
+  // 클릭할 때마다 최신 디렉토리로 메뉴를 다시 구성해 띄움
+  const popup = () => tray.popUpContextMenu(buildTrayMenu());
+  tray.on("click", popup);
+  tray.on("right-click", popup);
+}
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1040,
@@ -807,6 +877,10 @@ function createWindow() {
       nodeIntegration: false,
       backgroundThrottling: false, // 백그라운드여도 렌더 유지(캡처 빈 프레임 방지)
     },
+  });
+  mainWindow = win;
+  win.on("closed", () => {
+    if (mainWindow === win) mainWindow = null;
   });
   win.loadFile("index.html");
   win.webContents.on(
@@ -860,6 +934,7 @@ app.whenReady().then(() => {
     }
   }
   createWindow();
+  if (!process.env.JUMPSTART_SHOT) createTray(); // 캡처 모드에선 트레이 생략
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });

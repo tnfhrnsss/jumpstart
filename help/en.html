@@ -125,8 +125,16 @@
         Claude Code, most recent first.
       </li>
       <li>
-        Each row has [Shell] / [claude -c] / [Finder] shortcuts plus git info
-        (repo, branch, last commit, push status).
+        Each row has [Shell] / [Continue] / [Resume…] / [Finder] shortcuts plus
+        git info (repo, branch, last commit, push status).
+      </li>
+      <li>
+        <b>Continue</b> resumes the most recent session (<code>claude -c</code
+        >); <b>Resume…</b> shows a session list in the terminal to
+        <b>pick from</b> (<code>claude --resume</code>).
+      </li>
+      <li>
+        Use the <b>search box</b> on the right to filter by path or repo name.
       </li>
       <li>
         Folders that were moved/deleted show <b>"missing"</b>; hide them with
@@ -158,6 +166,14 @@
         settings.)
       </li>
     </ul>
+
+    <h3>Collapse / expand sections</h3>
+    <p>
+      Use the <b>▾ / ▸ arrow</b> in each section header (or click the header) to
+      collapse or expand a section. The count badge stays visible when
+      collapsed, and the state is remembered across restarts — handy when lists
+      get long.
+    </p>
 
     <h2 id="faq">FAQ</h2>
 

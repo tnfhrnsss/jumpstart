@@ -10,7 +10,11 @@ window.I18N.ko = {
   "btn.delete": "삭제",
   "btn.shell": "셸",
   "btn.finder": "Finder",
-  "btn.claudeC": "claude -c",
+  "btn.claudeC": "이어가기",
+  "btn.claudeR": "세션 선택",
+  "continue.title": "최근 세션 이어가기 (claude -c)",
+  "resume.title": "세션 목록에서 골라 재개 (claude --resume)",
+  "search.projects": "검색 (경로·리포명)",
   "title.settings": "설정",
 
   "set.lang": "언어",
@@ -77,9 +81,6 @@ window.I18N.ko = {
   "time.minAgo": "{n}분 전",
   "time.hourAgo": "{n}시간 전",
   "time.dayAgo": "{n}일 전",
-
-  "about.maker": "만든이",
-  "about.note": "버그·장애·개선 요청은 GitHub Issues로 남겨 주세요.",
 
   "theme.charcoal": "Charcoal · 다크 기본",
   "theme.ocean": "Ocean · 딥블루",

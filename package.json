@@ -3,6 +3,8 @@
   "productName": "Jumpstart",
   "version": "0.1.0",
   "description": "반복 업무를 클릭 한 번으로 — 터미널 런처 + Claude Code 디렉토리 대시보드 (macOS)",
+  "license": "MIT",
+  "author": "jj",
   "main": "main.js",
   "scripts": {
     "start": "electron .",

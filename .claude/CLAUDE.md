@@ -4,10 +4,11 @@
 
 ## 프로젝트
 **Jumpstart** — 반복 업무를 클릭 한 번으로 실행하는 macOS용 Electron 데스크탑 앱.
-1. **빠른 실행**: 즐겨찾기. 다른 섹션의 ⭐ 버튼으로 추가한 항목({name,dir,cmd})을 모아 실행 (`quick-favorites.json`). 기본 도구 프리셋은 없음(제거됨)
+1. **빠른 실행**: 즐겨찾기. 다른 섹션의 ⭐ 버튼으로 추가한 항목({name,dir,cmd})을 모아 실행 (`quick-favorites.json`, 최대 8개). 기본 도구 프리셋은 없음(제거됨)
 2. **내 워크플로우**: 사용자가 등록한 "이름/경로/명령" 북마크 실행
-3. **Claude Code 디렉토리**: `~/.claude/projects/` 스캔 + 폴더별 git 정보(리포·브랜치·마지막 커밋·푸시 여부)
-4. **최근 실행** 히스토리, **화면 테마**(7종), **터미널 선택**(Terminal/iTerm2/Tabby/커스텀)
+3. **Claude Code 디렉토리**: `~/.claude/projects/` 스캔 + 폴더별 git 정보(리포·브랜치·마지막 커밋·푸시 여부). 경로·리포 주소 **검색**, ✕로 **숨김**(`hidden-projects.json`), **이어가기**(claude -c)/**세션 선택**(claude --resume)
+4. **자주 여는 곳**: `~/.zsh_history`의 `cd` 기록(존재하는 폴더만) + 앱 실행 기록 합산
+5. **최근 실행** 히스토리, **화면 테마**(7종), **터미널 선택**(Terminal/iTerm2/Tabby/커스텀), **열기 방식**(새 창/새 탭), **언어**(한/영), 섹션 **접기/펼치기**(localStorage)
 
 ## 구조 (Electron 3-프로세스 분리)
 - `main.js` — 메인 프로세스. **모든 Node/OS 작업은 여기서만** (파일 읽기, git 실행, 터미널 기동, 설정 저장)
@@ -35,7 +36,7 @@ npm run dmg        # 배포용 dmg
 - **터미널 기동은 항상 macOS 기본 Terminal.app(osascript) 기준**이 기본값. 셸 명령은 `shellQuote`, AppleScript 문자열은 `asQuote`로 이스케이프.
 - **git remote URL을 표시할 때는 반드시 자격증명 제거** (`stripCreds`/`toWebUrl`). 토큰/비번이 박힌 URL이 UI·로그에 노출되면 안 됨.
 - 외부 명령은 `execFileSync`(동기) 사용 — 메인 이벤트루프를 막으므로 timeout 필수, 호출 수 최소화. GUI 실행 시 PATH가 빈약하므로 설치 감지는 로그인 셸(`SHELL -lc 'command -v X'`)로.
-- 설정/북마크/히스토리는 프로젝트가 아니라 `app.getPath('userData')`(`~/Library/Application Support/jumpstart/`)에 저장됨. **package.json의 `name`을 바꾸면 이 경로가 바뀌어 기존 데이터가 분리되니 주의.**
+- 설정/북마크/히스토리/즐겨찾기/숨김목록은 프로젝트가 아니라 `app.getPath('userData')`(`~/Library/Application Support/jumpstart/`)에 저장됨: `settings.json`, `bookmarks.json`, `launch-history.json`, `quick-favorites.json`, `hidden-projects.json`. **package.json의 `name`을 바꾸면 이 경로가 바뀌어 기존 데이터가 분리되니 주의.** (단, 섹션 접기 상태는 렌더러 localStorage)
 
 ## 코드 스타일
 - 의존성 최소(런타임 의존성 0, electron/electron-builder는 devDependencies). 새 패키지 추가는 신중히.

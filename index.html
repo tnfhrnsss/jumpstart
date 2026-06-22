@@ -46,6 +46,25 @@
         align-items: center;
         gap: 10px;
         margin-bottom: 8px;
+        cursor: pointer;
+        user-select: none;
+      }
+      .chev {
+        color: var(--muted);
+        font-size: 20px;
+        line-height: 1;
+        width: 20px;
+        text-align: center;
+        flex-shrink: 0;
+        position: relative;
+        top: -2px;
+        transition: color 0.1s;
+      }
+      .section-head:hover .chev {
+        color: var(--accent);
+      }
+      .section.collapsed > *:not(.section-head) {
+        display: none;
       }
       .section-head h2 {
         font-size: 13px;
@@ -57,6 +76,12 @@
       .count {
         color: var(--muted);
         font-size: 11px;
+      }
+      .search {
+        margin-left: auto;
+        width: 200px;
+        padding: 4px 9px;
+        font-size: 12px;
       }
       .info {
         color: var(--muted);
@@ -284,26 +309,6 @@
         align-items: center;
         justify-content: center;
       }
-      .about {
-        margin-top: 10px;
-        padding-top: 10px;
-        border-top: 1px solid var(--border);
-        color: var(--muted);
-        font-size: 11px;
-        line-height: 1.7;
-      }
-      .about b {
-        color: var(--text);
-        font-weight: 500;
-      }
-      .about a {
-        color: var(--accent);
-        cursor: pointer;
-        text-decoration: none;
-      }
-      .about a:hover {
-        text-decoration: underline;
-      }
     </style>
   </head>
   <body>
@@ -380,11 +385,11 @@
       <div style="text-align: right">
         <button class="primary" id="set-save" data-i18n="btn.save">저장</button>
       </div>
-      <div class="about" id="about"></div>
     </div>
 
-    <div class="section" id="quick-section">
+    <div class="section" id="quick-section" data-collapse="quick">
       <div class="section-head">
+        <span class="chev"></span>
         <h2 data-i18n="sec.quick">빠른 실행</h2>
         <span class="count" id="quick-count"></span>
         <span
@@ -398,8 +403,9 @@
       <div id="quick"></div>
     </div>
 
-    <div class="section">
+    <div class="section" data-collapse="workflow">
       <div class="section-head">
+        <span class="chev"></span>
         <h2 data-i18n="sec.workflow">내 워크플로우</h2>
         <span class="count" id="bm-count"></span>
       </div>
@@ -427,24 +433,41 @@
       </div>
     </div>
 
-    <div class="section">
+    <div class="section" data-collapse="projects">
       <div class="section-head">
+        <span class="chev"></span>
         <h2 data-i18n="sec.projects">Claude Code 디렉토리</h2>
         <span class="count" id="proj-count"></span>
+        <input
+          id="proj-search"
+          class="search"
+          type="search"
+          data-i18n-ph="search.projects"
+          placeholder="검색 (경로·리포명)"
+        />
       </div>
       <div id="projects"></div>
     </div>
 
-    <div class="section" id="frequent-section" style="display: none">
+    <div
+      class="section"
+      id="frequent-section"
+      data-collapse="frequent"
+      style="display: none"
+    >
       <div class="section-head">
+        <span class="chev"></span>
         <h2 data-i18n="sec.frequent">자주 여는 곳</h2>
         <span class="count" id="freq-count"></span>
       </div>
       <div id="frequent"></div>
     </div>
 
-    <div class="section">
-      <div class="section-head"><h2 data-i18n="sec.history">최근 실행</h2></div>
+    <div class="section" data-collapse="history">
+      <div class="section-head">
+        <span class="chev"></span>
+        <h2 data-i18n="sec.history">최근 실행</h2>
+      </div>
       <div id="history"></div>
     </div>
 

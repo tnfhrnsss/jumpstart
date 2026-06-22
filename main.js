@@ -60,35 +60,38 @@ function getAppInfo() {
   const meta = readJSON(path.join(__dirname, "meta.json"), {});
   return { version: app.getVersion(), ...meta };
 }
-// macOS 상단 앱 메뉴 "About Jumpstart"가 여는 네이티브 정보 패널을 채운다.
-// (설정 패널의 About과는 별개. 언어 설정에 맞춰 표기를 바꾼다.)
-function applyAboutPanel() {
+// 커스텀 About 창(help/about.html). 네이티브 패널 대신 사용해 글꼴/라이선스까지 표시.
+let aboutWin = null;
+function openAbout() {
   const m = getAppInfo();
-  const ko = getSettings().lang !== "en";
-  const L = ko
-    ? { maker: "만든이", last: "마지막 패치", rev: "리비전" }
-    : { maker: "Maker", last: "Last patch", rev: "Revision" };
-  const note = ko
-    ? "버그·장애·개선 요청은 GitHub Issues로 남겨 주세요."
-    : "Please report bugs and feature requests via GitHub Issues.";
-  const credits = [
-    m.maker ? `${L.maker} · ${m.maker}` : "",
-    m.lastPatch
-      ? `${L.last} · ${m.lastPatch}${m.revision ? ` (${L.rev} ${m.revision})` : ""}`
-      : "",
-    m.github || "",
-    note,
-  ]
-    .filter(Boolean)
-    .join("\n");
-  app.setAboutPanelOptions({
-    applicationName: "Jumpstart",
-    applicationVersion: m.version,
-    version: m.revision || "",
-    copyright: m.copyright ? `© ${m.copyright}` : "",
-    credits,
-    iconPath: ICON_PATH,
+  if (aboutWin && !aboutWin.isDestroyed()) {
+    aboutWin.focus();
+    return;
+  }
+  aboutWin = new BrowserWindow({
+    width: 360,
+    height: 460,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    title: "About Jumpstart",
+    icon: ICON_PATH,
+    webPreferences: { contextIsolation: true, nodeIntegration: false },
   });
+  aboutWin.setMenuBarVisibility(false);
+  aboutWin.loadFile(path.join(__dirname, "help", "about.html"), {
+    query: {
+      v: m.version || "",
+      holder: m.copyright || "jj",
+      gh: m.github || "",
+    },
+  });
+  aboutWin.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
+    return { action: "deny" };
+  });
+  aboutWin.on("closed", () => (aboutWin = null));
 }
 // 도움말 창(help/<lang>.html). section 으로 #usage / #faq 앵커 이동.
 let helpWin = null;
@@ -137,8 +140,26 @@ function buildAppMenu() {
         repo: "GitHub Repository",
         rel: "Download (Releases)",
       };
+  // 앱 메뉴: 기본 appMenu 대신, About 항목이 커스텀 창을 열도록 직접 구성
+  const appMenu = {
+    label: app.name,
+    submenu: [
+      {
+        label: ko ? "Jumpstart 정보" : "About Jumpstart",
+        click: () => openAbout(),
+      },
+      { type: "separator" },
+      { role: "services" },
+      { type: "separator" },
+      { role: "hide" },
+      { role: "hideOthers" },
+      { role: "unhide" },
+      { type: "separator" },
+      { role: "quit" },
+    ],
+  };
   const template = [
-    ...(process.platform === "darwin" ? [{ role: "appMenu" }] : []),
+    ...(process.platform === "darwin" ? [appMenu] : []),
     { role: "editMenu" },
     { role: "viewMenu" },
     { role: "windowMenu" },
@@ -620,7 +641,13 @@ ipcMain.handle("get-launch-history", () =>
 );
 ipcMain.handle("launch", (_e, { dir, cmd, label }) => launch(dir, cmd, label));
 ipcMain.handle("open-claude", (_e, { dir, mode }) => {
-  const cmd = mode === "resume" ? "claude -c" : "claude";
+  // pick: 세션 목록에서 골라 재개 / resume: 최근 세션 이어가기(-c) / 그 외: 새 세션
+  const cmd =
+    mode === "pick"
+      ? "claude --resume"
+      : mode === "resume"
+        ? "claude -c"
+        : "claude";
   return launch(dir, cmd, `claude (${dir})`);
 });
 ipcMain.handle("reveal", (_e, p) => {
@@ -634,8 +661,7 @@ ipcMain.handle("open-external", (_e, url) => {
 ipcMain.handle("get-settings", () => getSettings());
 ipcMain.handle("save-settings", (_e, s) => {
   writeJSON(userFile("settings.json"), { ...defaultSettings(), ...s });
-  applyAboutPanel(); // 언어가 바뀌면 네이티브 About 패널 표기도 갱신
-  buildAppMenu(); // 메뉴 라벨도 언어에 맞춰 갱신
+  buildAppMenu(); // 언어가 바뀌면 메뉴 라벨도 갱신
   return true;
 });
 ipcMain.handle("detect-terminals", () => detectTerminals());
@@ -680,8 +706,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  applyAboutPanel(); // 상단 메뉴 "About Jumpstart" 패널 내용 설정
-  buildAppMenu(); // 상단 메뉴(Help 포함) 구성
+  buildAppMenu(); // 상단 메뉴(About·Help 포함) 구성
   // 개발 실행(electron .)에서도 Dock 아이콘을 우리 아이콘으로 교체
   if (process.platform === "darwin" && app.dock) {
     try {

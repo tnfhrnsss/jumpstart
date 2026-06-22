@@ -11,7 +11,11 @@ window.I18N.en = {
   "btn.delete": "Delete",
   "btn.shell": "Shell",
   "btn.finder": "Finder",
-  "btn.claudeC": "claude -c",
+  "btn.claudeC": "Continue",
+  "btn.claudeR": "Resume…",
+  "continue.title": "Continue the most recent session (claude -c)",
+  "resume.title": "Pick a session to resume (claude --resume)",
+  "search.projects": "Search (path · repo)",
   "title.settings": "Settings",
 
   "set.lang": "Language",
@@ -78,9 +82,6 @@ window.I18N.en = {
   "time.minAgo": "{n}m ago",
   "time.hourAgo": "{n}h ago",
   "time.dayAgo": "{n}d ago",
-
-  "about.maker": "Maker",
-  "about.note": "Please report bugs and feature requests via GitHub Issues.",
 
   "theme.charcoal": "Charcoal · dark default",
   "theme.ocean": "Ocean · deep blue",

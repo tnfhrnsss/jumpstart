@@ -1,4 +1,11 @@
-const { app, BrowserWindow, ipcMain, shell, nativeImage } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  shell,
+  nativeImage,
+  Menu,
+} = require("electron");
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
@@ -44,6 +51,7 @@ function defaultSettings() {
     customCommand: "",
     theme: "charcoal",
     lang: "ko", // ko | en
+    openIn: "window", // window | tab (탭은 Terminal·iTerm2만 지원)
   };
 }
 // 앱 메타정보(만든이/저작권/마지막 패치일/리비전)는 meta.json 한 곳에서 관리.
@@ -82,6 +90,71 @@ function applyAboutPanel() {
     iconPath: ICON_PATH,
   });
 }
+// 도움말 창(help/<lang>.html). section 으로 #usage / #faq 앵커 이동.
+let helpWin = null;
+function openHelp(section) {
+  const ko = getSettings().lang !== "en";
+  const file = path.join(__dirname, "help", ko ? "ko.html" : "en.html");
+  if (helpWin && !helpWin.isDestroyed()) {
+    helpWin.focus();
+    if (section)
+      helpWin.webContents
+        .executeJavaScript(`location.hash=${JSON.stringify("#" + section)}`)
+        .catch(() => {});
+    return;
+  }
+  helpWin = new BrowserWindow({
+    width: 720,
+    height: 820,
+    title: ko ? "Jumpstart — 도움말" : "Jumpstart — Help",
+    icon: ICON_PATH,
+    webPreferences: { contextIsolation: true, nodeIntegration: false },
+  });
+  helpWin.loadFile(file, section ? { hash: section } : {});
+  // 도움말 안의 외부 링크는 기본 브라우저로
+  helpWin.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
+    return { action: "deny" };
+  });
+  helpWin.on("closed", () => (helpWin = null));
+}
+// 상단 애플리케이션 메뉴 구성(기본 메뉴 + Help 채우기). 언어에 맞춰 라벨 갱신.
+function buildAppMenu() {
+  const m = getAppInfo();
+  const repo = m.github || "https://github.com/tnfhrnsss/jumpstart";
+  const releases = repo.replace(/\/$/, "") + "/releases/latest";
+  const ko = getSettings().lang !== "en";
+  const L = ko
+    ? {
+        usage: "사용 방법",
+        faq: "자주 묻는 질문(FAQ)",
+        repo: "GitHub 저장소",
+        rel: "다운로드(릴리스)",
+      }
+    : {
+        usage: "How to Use",
+        faq: "FAQ",
+        repo: "GitHub Repository",
+        rel: "Download (Releases)",
+      };
+  const template = [
+    ...(process.platform === "darwin" ? [{ role: "appMenu" }] : []),
+    { role: "editMenu" },
+    { role: "viewMenu" },
+    { role: "windowMenu" },
+    {
+      role: "help",
+      submenu: [
+        { label: L.usage, click: () => openHelp("usage") },
+        { label: L.faq, click: () => openHelp("faq") },
+        { type: "separator" },
+        { label: L.repo, click: () => shell.openExternal(repo) },
+        { label: L.rel, click: () => shell.openExternal(releases) },
+      ],
+    },
+  ];
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+}
 function getSettings() {
   return { ...defaultSettings(), ...readJSON(userFile("settings.json"), {}) };
 }
@@ -103,60 +176,14 @@ function detectTerminals() {
   }));
 }
 
-// ── 빠른 실행 프리셋(자주 쓰는 도구) ───────────────────
-// bin: 설치 여부를 확인할 실행파일. dir/cmd: 클릭 시 실행할 작업.
-const PRESETS = [
-  {
-    id: "docker-up",
-    name: "Docker Compose 올리기",
-    bin: "docker",
-    dir: "~",
-    cmd: "docker compose up -d",
-  },
-  {
-    id: "docker-ps",
-    name: "Docker 컨테이너 목록",
-    bin: "docker",
-    dir: "~",
-    cmd: "docker ps",
-  },
-  {
-    id: "mysql",
-    name: "MySQL 접속",
-    bin: "mysql",
-    dir: "~",
-    cmd: "mysql -u root -p",
-  },
-  { id: "claude", name: "Claude Code", bin: "claude", dir: "~", cmd: "claude" },
-  { id: "node", name: "Node REPL", bin: "node", dir: "~", cmd: "node" },
-  {
-    id: "python",
-    name: "Python REPL",
-    bin: "python3",
-    dir: "~",
-    cmd: "python3",
-  },
-];
-// GUI에서 켠 Electron은 PATH가 제한적이라, 로그인 셸로 설치 여부를 확인한다.
-function hasBin(bin) {
-  try {
-    return !!execFileSync(SHELL_PATH, ["-lc", `command -v ${bin}`], {
-      encoding: "utf8",
-      timeout: 4000,
-      stdio: ["ignore", "pipe", "ignore"],
-    }).trim();
-  } catch {
-    return false;
-  }
+// ── 빠른 실행 (즐겨찾기) ────────────────────────────────
+// 사용자가 다른 섹션(워크플로우·Claude 디렉토리·자주 여는 곳)에서 ⭐로 추가한
+// 항목 목록. {id, name, dir, cmd} 형태로 quick-favorites.json 에 저장.
+function getQuickFavorites() {
+  return readJSON(userFile("quick-favorites.json"), []);
 }
-function detectPresets() {
-  return PRESETS.map((p) => ({
-    id: p.id,
-    name: p.name,
-    dir: p.dir,
-    cmd: p.cmd,
-    available: hasBin(p.bin),
-  }));
+function setQuickFavorites(list) {
+  writeJSON(userFile("quick-favorites.json"), Array.isArray(list) ? list : []);
 }
 
 // ── Claude Code 디렉토리 탐색 ───────────────────────────
@@ -441,25 +468,61 @@ function pruneRunScripts() {
   } catch {}
 }
 
-function launchTerminalApp(inner) {
-  const script = [
-    'tell application "Terminal"',
-    `  do script ${asQuote(inner)}`,
-    "  activate",
-    "end tell",
-  ].join("\n");
+function launchTerminalApp(inner, openIn) {
+  let script;
+  if (openIn === "tab") {
+    // 창이 이미 있으면 Cmd+T로 새 탭을 열고 거기서 실행. (System Events =손쉬운 사용 권한 필요)
+    // 창이 없으면 do script가 새 창을 만든다.
+    script = [
+      'tell application "Terminal"',
+      "  activate",
+      "  if (count of windows) is 0 then",
+      `    do script ${asQuote(inner)}`,
+      "  else",
+      '    tell application "System Events" to keystroke "t" using command down',
+      "    delay 0.2",
+      `    do script ${asQuote(inner)} in front window`,
+      "  end if",
+      "end tell",
+    ].join("\n");
+  } else {
+    script = [
+      'tell application "Terminal"',
+      `  do script ${asQuote(inner)}`,
+      "  activate",
+      "end tell",
+    ].join("\n");
+  }
   spawnDetached("osascript", ["-e", script]);
 }
-function launchITerm(inner) {
-  const script = [
-    'tell application "iTerm"',
-    "  activate",
-    "  set w to (create window with default profile)",
-    "  tell current session of w",
-    `    write text ${asQuote(inner)}`,
-    "  end tell",
-    "end tell",
-  ].join("\n");
+function launchITerm(inner, openIn) {
+  let script;
+  if (openIn === "tab") {
+    script = [
+      'tell application "iTerm"',
+      "  activate",
+      "  if (count of windows) = 0 then",
+      "    set w to (create window with default profile)",
+      "    tell current session of w to write text " + asQuote(inner),
+      "  else",
+      "    tell current window",
+      "      create tab with default profile",
+      "      tell current session to write text " + asQuote(inner),
+      "    end tell",
+      "  end if",
+      "end tell",
+    ].join("\n");
+  } else {
+    script = [
+      'tell application "iTerm"',
+      "  activate",
+      "  set w to (create window with default profile)",
+      "  tell current session of w",
+      `    write text ${asQuote(inner)}`,
+      "  end tell",
+      "end tell",
+    ].join("\n");
+  }
   spawnDetached("osascript", ["-e", script]);
 }
 function launchTabby(settings, dir, cmd) {
@@ -489,10 +552,12 @@ function launch(dirRaw, cmd, label) {
   const dir = expandTilde(dirRaw);
   const s = getSettings();
   const inner = buildInner(dir, cmd);
+  // openIn: "window"(기본) | "tab". 탭은 Terminal·iTerm2만 지원, Tabby/커스텀은 무시.
+  const openIn = s.openIn === "tab" ? "tab" : "window";
   try {
     switch (s.terminal) {
       case "iterm":
-        launchITerm(inner);
+        launchITerm(inner, openIn);
         break;
       case "tabby":
         launchTabby(s, dir, cmd);
@@ -501,7 +566,7 @@ function launch(dirRaw, cmd, label) {
         launchCustom(s, dir, cmd);
         break;
       default:
-        launchTerminalApp(inner);
+        launchTerminalApp(inner, openIn);
     }
   } catch (e) {
     console.error("터미널 실행 실패:", e);
@@ -545,6 +610,11 @@ ipcMain.handle("save-bookmarks", (_e, list) => {
   writeJSON(userFile("bookmarks.json"), list);
   return true;
 });
+ipcMain.handle("get-quick-favorites", () => getQuickFavorites());
+ipcMain.handle("save-quick-favorites", (_e, list) => {
+  setQuickFavorites(list);
+  return true;
+});
 ipcMain.handle("get-launch-history", () =>
   readJSON(userFile("launch-history.json"), []),
 );
@@ -565,10 +635,10 @@ ipcMain.handle("get-settings", () => getSettings());
 ipcMain.handle("save-settings", (_e, s) => {
   writeJSON(userFile("settings.json"), { ...defaultSettings(), ...s });
   applyAboutPanel(); // 언어가 바뀌면 네이티브 About 패널 표기도 갱신
+  buildAppMenu(); // 메뉴 라벨도 언어에 맞춰 갱신
   return true;
 });
 ipcMain.handle("detect-terminals", () => detectTerminals());
-ipcMain.handle("detect-presets", () => detectPresets());
 ipcMain.handle("app-version", () => app.getVersion());
 ipcMain.handle("app-info", () => getAppInfo());
 
@@ -611,6 +681,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
   applyAboutPanel(); // 상단 메뉴 "About Jumpstart" 패널 내용 설정
+  buildAppMenu(); // 상단 메뉴(Help 포함) 구성
   // 개발 실행(electron .)에서도 Dock 아이콘을 우리 아이콘으로 교체
   if (process.platform === "darwin" && app.dock) {
     try {

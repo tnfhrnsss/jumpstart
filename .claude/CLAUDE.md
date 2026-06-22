@@ -4,7 +4,7 @@
 
 ## 프로젝트
 **Jumpstart** — 반복 업무를 클릭 한 번으로 실행하는 macOS용 Electron 데스크탑 앱.
-1. **빠른 실행**: 자주 쓰는 도구(Docker·MySQL·Claude·Node·Python) 프리셋을 버튼으로 실행
+1. **빠른 실행**: 즐겨찾기. 다른 섹션의 ⭐ 버튼으로 추가한 항목({name,dir,cmd})을 모아 실행 (`quick-favorites.json`). 기본 도구 프리셋은 없음(제거됨)
 2. **내 워크플로우**: 사용자가 등록한 "이름/경로/명령" 북마크 실행
 3. **Claude Code 디렉토리**: `~/.claude/projects/` 스캔 + 폴더별 git 정보(리포·브랜치·마지막 커밋·푸시 여부)
 4. **최근 실행** 히스토리, **화면 테마**(7종), **터미널 선택**(Terminal/iTerm2/Tabby/커스텀)

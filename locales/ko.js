@@ -16,11 +16,13 @@ window.I18N.ko = {
   "set.lang": "언어",
   "set.theme": "화면 테마",
   "set.terminal": "터미널 앱",
+  "set.openIn": "열기 방식",
+  "openIn.window": "새 창",
+  "openIn.tab": "새 탭 (Terminal·iTerm2)",
+  "set.openInHint":
+    "새 탭은 Terminal·iTerm2에서만 동작합니다. (Terminal은 첫 사용 시 “손쉬운 사용” 권한 필요 · Tabby/커스텀은 무시)",
   "set.tabbyPath": "Tabby 경로",
   "set.customCmd": "커스텀 명령",
-  "set.presets": "빠른 실행 도구",
-  "set.presetsHint":
-    '체크한 도구만 "빠른 실행"에 버튼으로 나옵니다. (회색 = 이 PC에 미설치)',
   "set.customHint": `새 터미널을 여는 명령을 입력하세요. 치환자: <code>{{script}}</code> (cd+명령이 담긴 실행 스크립트 경로), <code>{{dir}}</code>, <code>{{cmd}}</code>, <code>{{shell}}</code>.<br />예시 — kitty: <code>kitty {{script}}</code> · WezTerm: <code>wezterm start -- {{script}}</code> · Alacritty: <code>alacritty -e {{script}}</code>`,
 
   "ph.tabby": "/Applications/Tabby.app/Contents/MacOS/Tabby",
@@ -30,6 +32,12 @@ window.I18N.ko = {
   "ph.bmCmd": "명령어 (비우면 셸만)",
 
   "sec.quick": "빠른 실행",
+  "quick.empty": "아래 목록에서 ⭐ 버튼으로 자주 쓰는 항목을 추가하세요.",
+  "quick.count": "{n}/{max}",
+  "quick.full":
+    "빠른 실행은 최대 {max}개까지예요. 기존 항목을 ✕로 지운 뒤 추가하세요.",
+  "quick.remove": "빠른 실행에서 제거",
+  "fav.add": "빠른 실행에 추가",
   "sec.workflow": "내 워크플로우",
   "sec.projects": "Claude Code 디렉토리",
   "sec.frequent": "자주 여는 곳",
@@ -80,13 +88,6 @@ window.I18N.ko = {
   "theme.nord": "Nord · 슬레이트(밝은 다크)",
   "theme.sand": "Sand · 웜 라이트",
   "theme.light": "Light · 화이트",
-
-  "preset.docker-up": "Docker Compose 올리기",
-  "preset.docker-ps": "Docker 컨테이너 목록",
-  "preset.mysql": "MySQL 접속",
-  "preset.claude": "Claude Code",
-  "preset.node": "Node REPL",
-  "preset.python": "Python REPL",
 
   "term.terminal-app": "Terminal (macOS 기본)",
   "term.iterm": "iTerm2",

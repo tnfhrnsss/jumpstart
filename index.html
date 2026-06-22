@@ -58,6 +58,15 @@
         color: var(--muted);
         font-size: 11px;
       }
+      .info {
+        color: var(--muted);
+        font-size: 12px;
+        cursor: help;
+        user-select: none;
+      }
+      .info:hover {
+        color: var(--accent);
+      }
       button {
         background: var(--panel2);
         color: var(--text);
@@ -175,6 +184,17 @@
       .del:hover {
         color: #c97;
       }
+      .fav {
+        color: var(--muted);
+        border: none;
+        background: none;
+        padding: 2px 6px;
+        font-size: 14px;
+        line-height: 1;
+      }
+      .fav:hover {
+        color: #e0b65a;
+      }
       .gitline {
         color: var(--muted);
         font-size: 11px;
@@ -240,19 +260,6 @@
       }
       .field > input {
         flex: 1;
-      }
-      #set-presets label {
-        display: flex;
-        align-items: center;
-        gap: 7px;
-        margin: 0 0 5px;
-        line-height: 1.4;
-      }
-      #set-presets input[type="checkbox"] {
-        flex: none;
-        width: 14px;
-        height: 14px;
-        margin: 0;
       }
       .hint {
         color: var(--muted);
@@ -333,6 +340,13 @@
         <label data-i18n="set.terminal">터미널 앱</label>
         <select id="set-terminal"></select>
       </div>
+      <div class="field">
+        <label data-i18n="set.openIn">열기 방식</label>
+        <select id="set-openin"></select>
+      </div>
+      <div class="hint" data-i18n="set.openInHint">
+        새 탭은 Terminal·iTerm2에서만 동작합니다.
+      </div>
       <div class="field" id="field-tabby" style="display: none">
         <label data-i18n="set.tabbyPath">Tabby 경로</label>
         <input
@@ -363,23 +377,23 @@
         <code>wezterm start -- {{script}}</code> · Alacritty:
         <code>alacritty -e {{script}}</code>
       </div>
-      <div class="field" style="align-items: flex-start">
-        <label data-i18n="set.presets">빠른 실행 도구</label>
-        <div id="set-presets" style="flex: 1"></div>
-      </div>
-      <div class="hint" data-i18n="set.presetsHint">
-        체크한 도구만 "빠른 실행"에 버튼으로 나옵니다. (회색 =이 PC에 미설치)
-      </div>
       <div style="text-align: right">
         <button class="primary" id="set-save" data-i18n="btn.save">저장</button>
       </div>
       <div class="about" id="about"></div>
     </div>
 
-    <div class="section" id="quick-section" style="display: none">
+    <div class="section" id="quick-section">
       <div class="section-head">
         <h2 data-i18n="sec.quick">빠른 실행</h2>
         <span class="count" id="quick-count"></span>
+        <span
+          class="info"
+          id="quick-info"
+          data-i18n-title="quick.empty"
+          title="아래 목록에서 ⭐ 버튼으로 자주 쓰는 항목을 추가하세요."
+          >ⓘ</span
+        >
       </div>
       <div id="quick"></div>
     </div>

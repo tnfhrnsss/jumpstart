@@ -17,11 +17,13 @@ window.I18N.en = {
   "set.lang": "Language",
   "set.theme": "Theme",
   "set.terminal": "Terminal app",
+  "set.openIn": "Open in",
+  "openIn.window": "New window",
+  "openIn.tab": "New tab (Terminal·iTerm2)",
+  "set.openInHint":
+    "New tab works only with Terminal & iTerm2. (Terminal needs Accessibility permission on first use · Tabby/custom ignore it)",
   "set.tabbyPath": "Tabby path",
   "set.customCmd": "Custom command",
-  "set.presets": "Quick-run tools",
-  "set.presetsHint":
-    'Only checked tools appear as buttons in "Quick Run". (grayed = not installed on this Mac)',
   "set.customHint": `Enter the command that opens a new terminal. Placeholders: <code>{{script}}</code> (path to a run script with cd+command), <code>{{dir}}</code>, <code>{{cmd}}</code>, <code>{{shell}}</code>.<br />Examples — kitty: <code>kitty {{script}}</code> · WezTerm: <code>wezterm start -- {{script}}</code> · Alacritty: <code>alacritty -e {{script}}</code>`,
 
   "ph.tabby": "/Applications/Tabby.app/Contents/MacOS/Tabby",
@@ -31,6 +33,12 @@ window.I18N.en = {
   "ph.bmCmd": "Command (empty = shell only)",
 
   "sec.quick": "Quick Run",
+  "quick.empty":
+    "Add frequently used items with the ⭐ button in the lists below.",
+  "quick.count": "{n}/{max}",
+  "quick.full": "Quick Run holds up to {max} items. Remove one with ✕ first.",
+  "quick.remove": "Remove from Quick Run",
+  "fav.add": "Add to Quick Run",
   "sec.workflow": "My Workflows",
   "sec.projects": "Claude Code Directories",
   "sec.frequent": "Frequent Folders",
@@ -81,13 +89,6 @@ window.I18N.en = {
   "theme.nord": "Nord · slate (light dark)",
   "theme.sand": "Sand · warm light",
   "theme.light": "Light · white",
-
-  "preset.docker-up": "Docker Compose up",
-  "preset.docker-ps": "Docker containers",
-  "preset.mysql": "MySQL connect",
-  "preset.claude": "Claude Code",
-  "preset.node": "Node REPL",
-  "preset.python": "Python REPL",
 
   "term.terminal-app": "Terminal (macOS default)",
   "term.iterm": "iTerm2",

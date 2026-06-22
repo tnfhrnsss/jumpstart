@@ -172,7 +172,6 @@ function applyTheme(id) {
 // ── 설정 ───────────────────────────────────────────────
 let settings = null;
 let terminals = [];
-let presets = [];
 
 $("toggle-settings").onclick = () => $("settings").classList.toggle("open");
 
@@ -186,7 +185,6 @@ function syncTerminalFields() {
 async function renderSettings() {
   settings = await window.api.getSettings();
   terminals = await window.api.detectTerminals();
-  presets = await window.api.detectPresets();
 
   // 언어
   const lsel = $("set-lang");
@@ -238,71 +236,97 @@ async function renderSettings() {
   sel.value = settings.terminal || "terminal-app";
   sel.onchange = syncTerminalFields;
 
+  // 열기 방식 (새 창 / 새 탭)
+  const osel = $("set-openin");
+  osel.innerHTML = "";
+  for (const id of ["window", "tab"]) {
+    const o = document.createElement("option");
+    o.value = id;
+    o.textContent = t("openIn." + id);
+    osel.appendChild(o);
+  }
+  osel.value = settings.openIn === "tab" ? "tab" : "window";
+
   $("set-tabby").value = settings.tabbyPath || "";
   $("set-custom").value = settings.customCommand || "";
   syncTerminalFields();
-
-  // 빠른 실행 프리셋 체크리스트
-  const enabled = settings.enabledPresetIds; // null 이면 "설치된 것 자동"
-  const box = $("set-presets");
-  box.innerHTML = "";
-  for (const p of presets) {
-    const on = enabled == null ? p.available : enabled.includes(p.id);
-    const lab = document.createElement("label");
-    lab.style.opacity = p.available ? "" : "0.45";
-    const notInstalled = p.available ? "" : "  " + t("term.notInstalled");
-    lab.innerHTML = `<input type="checkbox" data-preset="${p.id}" ${on ? "checked" : ""} ${p.available ? "" : "disabled"} />
-      <span>${esc(t("preset." + p.id))} <span style="color:var(--muted);font-size:11px">· ${esc(p.cmd)}${esc(notInstalled)}</span></span>`;
-    box.appendChild(lab);
-  }
 }
 
 $("set-save").onclick = async () => {
-  const enabledPresetIds = Array.from(
-    $("set-presets").querySelectorAll("input[data-preset]:checked"),
-  ).map((c) => c.dataset.preset);
   await window.api.saveSettings({
     lang: $("set-lang").value,
     theme: $("set-theme").value,
     terminal: $("set-terminal").value,
+    openIn: $("set-openin").value,
     tabbyPath: $("set-tabby").value.trim(),
     customCommand: $("set-custom").value.trim(),
-    enabledPresetIds,
   });
   $("settings").classList.remove("open");
   refreshAll();
 };
 
-// ── 빠른 실행 ──────────────────────────────────────────
-function renderQuick() {
-  const enabled = settings ? settings.enabledPresetIds : null;
-  const list = presets.filter((p) => {
-    if (!p.available) return false;
-    return enabled == null ? true : enabled.includes(p.id);
+// ── 빠른 실행 (즐겨찾기) ───────────────────────────────
+// 다른 섹션의 ⭐ 버튼으로 추가한 항목 목록. {id,name,dir,cmd}
+const QUICK_MAX = 8; // 즐겨찾기 최대 개수 (너무 많으면 부담스러우므로 제한)
+let quickFavs = [];
+const favKey = (dir, cmd) => `${dir} ${cmd || ""}`;
+function isFav(dir, cmd) {
+  return quickFavs.some((f) => favKey(f.dir, f.cmd) === favKey(dir, cmd));
+}
+// 다른 섹션에서 ⭐ 클릭 → 빠른 실행에 추가(중복은 무시). 전체 재렌더 없이 빠른 실행만 갱신.
+async function addQuickFav(item) {
+  if (!item || !item.dir) return;
+  if (isFav(item.dir, item.cmd)) return; // 이미 있음
+  if (quickFavs.length >= QUICK_MAX) {
+    alert(t("quick.full", { max: QUICK_MAX }));
+    return;
+  }
+  quickFavs.push({
+    id: Date.now(),
+    name: item.name || item.dir,
+    dir: item.dir,
+    cmd: item.cmd || "",
   });
-  $("quick-section").style.display = list.length ? "" : "none";
-  $("quick-count").textContent = t("count.items", { n: list.length });
+  await window.api.saveQuickFavorites(quickFavs);
+  renderQuick();
+}
+async function removeQuickFav(id) {
+  quickFavs = quickFavs.filter((f) => f.id != id);
+  await window.api.saveQuickFavorites(quickFavs);
+  renderQuick();
+}
+async function renderQuick() {
+  quickFavs = await window.api.getQuickFavorites();
+  $("quick-section").style.display = ""; // 비어 있어도 헤더는 항상 표시
+  $("quick-count").textContent = t("quick.count", {
+    n: quickFavs.length,
+    max: QUICK_MAX,
+  });
   const box = $("quick");
-  box.innerHTML = "";
-  for (const p of list) {
+  box.innerHTML = ""; // 비었을 때 추가 안내는 헤더의 ⓘ 툴팁으로 제공
+  for (const f of quickFavs) {
     const el = document.createElement("div");
     el.className = "row";
     el.innerHTML = `
       <div class="main">
-        <div class="path">${esc(t("preset." + p.id))}</div>
-        <div class="meta">${esc(p.dir)}  ·  ${esc(p.cmd)}</div>
+        <div class="path">${esc(f.name)}</div>
+        <div class="meta">${esc(f.dir)}${f.cmd ? "  ·  " + esc(f.cmd) : ""}</div>
       </div>
       <div class="actions">
-        <button class="primary" data-q="${p.id}">${esc(t("btn.run"))}</button>
+        <button class="primary" data-qrun="${f.id}">${esc(t("btn.run"))}</button>
+        <button class="del" data-qdel="${f.id}" title="${esc(t("quick.remove"))}">✕</button>
       </div>`;
     box.appendChild(el);
   }
-  box.querySelectorAll("[data-q]").forEach((btn) => {
+  box.querySelectorAll("[data-qrun]").forEach((btn) => {
     btn.onclick = () => {
-      const p = presets.find((x) => x.id === btn.dataset.q);
-      doLaunch({ dir: p.dir, cmd: p.cmd, label: t("preset." + p.id) });
+      const f = quickFavs.find((x) => x.id == btn.dataset.qrun);
+      if (f) doLaunch({ dir: f.dir, cmd: f.cmd, label: f.name });
     };
   });
+  box
+    .querySelectorAll("[data-qdel]")
+    .forEach((btn) => (btn.onclick = () => removeQuickFav(btn.dataset.qdel)));
 }
 
 // ── 워크플로우(북마크) ─────────────────────────────────
@@ -326,6 +350,10 @@ async function renderBookmarks() {
         <button class="primary" data-run="${b.id}">${esc(t("btn.run"))}</button>
         <button class="del" data-del="${b.id}">${esc(t("btn.delete"))}</button>
       </div>`;
+    el.querySelector(".actions").insertBefore(
+      makeFavButton({ name: b.name, dir: b.dir, cmd: b.cmd }),
+      el.querySelector("[data-del]"),
+    );
     box.appendChild(el);
   }
   box.querySelectorAll("[data-run]").forEach(
@@ -375,7 +403,48 @@ function wireDirButtons(box) {
     .forEach((b) => (b.onclick = () => window.api.reveal(b.dataset.finder)));
 }
 
+// 경로의 마지막 폴더명 (즐겨찾기 이름 기본값)
+function baseName(p) {
+  const s = String(p).replace(/\/+$/, "");
+  const i = s.lastIndexOf("/");
+  return (i >= 0 ? s.slice(i + 1) : s) || s;
+}
+// "빠른 실행에 추가(⭐)" 버튼 생성. 데이터를 클로저로 담아 속성 이스케이프 문제를 피함.
+function makeFavButton(item) {
+  const b = document.createElement("button");
+  b.className = "fav";
+  b.textContent = "★";
+  b.title = t("fav.add");
+  b.onclick = () => addQuickFav(item);
+  return b;
+}
+
 // ── Claude Code 디렉토리 ───────────────────────────────
+// 현재 숨김 개수 (✕로 행을 지울 때 전체 재렌더 없이 갱신하기 위해 보관)
+let projHiddenCount = 0;
+// 카운트 배지와 "숨긴 항목 N개 · 모두 표시" 안내를 재렌더 없이 갱신
+function refreshProjMeta() {
+  const box = $("projects");
+  const visible = box.querySelectorAll(".row").length;
+  $("proj-count").textContent = t("count.places", { n: visible });
+  let footer = $("proj-hidden");
+  if (projHiddenCount > 0) {
+    if (!footer) {
+      footer = document.createElement("div");
+      footer.id = "proj-hidden";
+      footer.className = "empty";
+      box.appendChild(footer);
+    }
+    footer.innerHTML = `${esc(t("hidden.restore", { n: projHiddenCount }))}<a class="restore">${esc(t("hidden.showAll"))}</a>`;
+    footer.querySelector(".restore").onclick = async () => {
+      await window.api.unhideAllProjects();
+      renderProjects();
+    };
+  } else if (footer) {
+    footer.remove();
+  }
+}
+
 async function renderProjects() {
   const { error, errorPath, projects, hiddenCount } =
     await window.api.scanProjects();
@@ -408,25 +477,26 @@ async function renderProjects() {
         <button data-finder="${esc(p.realPath)}">${esc(t("btn.finder"))}</button>
         <button class="del" data-hide="${esc(p.key)}" title="${esc(t("hide.title"))}">✕</button>
       </div>`;
+    // 빠른 실행 추가(⭐): 그 폴더에서 셸 열기로 등록
+    el.querySelector(".actions").insertBefore(
+      makeFavButton({ name: baseName(p.realPath), dir: p.realPath, cmd: "" }),
+      el.querySelector("[data-hide]"),
+    );
     box.appendChild(el);
   }
-  // 숨긴 항목이 있으면 복구 안내를 목록 끝에 표시
-  if (hiddenCount > 0) {
-    const el = document.createElement("div");
-    el.className = "empty";
-    el.innerHTML = `${esc(t("hidden.restore", { n: hiddenCount }))}<a class="restore">${esc(t("hidden.showAll"))}</a>`;
-    box.appendChild(el);
-    el.querySelector(".restore").onclick = async () => {
-      await window.api.unhideAllProjects();
-      renderProjects();
-    };
-  }
+  // 숨긴 항목 개수 표시(+복구 안내). 재렌더 없이 갱신할 수 있게 분리.
+  projHiddenCount = hiddenCount;
+  refreshProjMeta();
   wireDirButtons(box);
   box.querySelectorAll("[data-hide]").forEach(
     (b) =>
       (b.onclick = async () => {
         await window.api.hideProject(b.dataset.hide);
-        renderProjects();
+        // 전체 재렌더 대신 그 행만 제거 → 스크롤 위치 유지
+        const row = b.closest(".row");
+        if (row) row.remove();
+        projHiddenCount++;
+        refreshProjMeta();
       }),
   );
 
@@ -464,6 +534,9 @@ async function renderFrequent() {
         <button class="primary" data-resume="${esc(d.dir)}">${esc(t("btn.claudeC"))}</button>
         <button data-finder="${esc(d.dir)}">${esc(t("btn.finder"))}</button>
       </div>`;
+    el.querySelector(".actions").appendChild(
+      makeFavButton({ name: baseName(d.dir), dir: d.dir, cmd: "" }),
+    );
     box.appendChild(el);
   }
   wireDirButtons(box);

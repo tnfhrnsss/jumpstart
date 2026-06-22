@@ -8,6 +8,9 @@ contextBridge.exposeInMainWorld("api", {
   gitInfo: (dir) => ipcRenderer.invoke("git-info", dir),
   getBookmarks: () => ipcRenderer.invoke("get-bookmarks"),
   saveBookmarks: (list) => ipcRenderer.invoke("save-bookmarks", list),
+  getQuickFavorites: () => ipcRenderer.invoke("get-quick-favorites"),
+  saveQuickFavorites: (list) =>
+    ipcRenderer.invoke("save-quick-favorites", list),
   getLaunchHistory: () => ipcRenderer.invoke("get-launch-history"),
   launch: (payload) => ipcRenderer.invoke("launch", payload),
   openClaude: (payload) => ipcRenderer.invoke("open-claude", payload),
@@ -16,7 +19,6 @@ contextBridge.exposeInMainWorld("api", {
   getSettings: () => ipcRenderer.invoke("get-settings"),
   saveSettings: (s) => ipcRenderer.invoke("save-settings", s),
   detectTerminals: () => ipcRenderer.invoke("detect-terminals"),
-  detectPresets: () => ipcRenderer.invoke("detect-presets"),
   appVersion: () => ipcRenderer.invoke("app-version"),
   appInfo: () => ipcRenderer.invoke("app-info"),
 });

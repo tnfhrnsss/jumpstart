@@ -79,8 +79,9 @@ bin/install.sh             # 빌드 + /Applications/Jumpstart.app 설치  (= npm
 
 ## 사용법
 
-- **빠른 실행** — 자주 쓰는 도구(Docker·MySQL·Claude·Node 등)를 클릭 한 번으로 실행.
-  설정에서 켠 것 중 **이 PC에 설치된 것만** 버튼으로 나타납니다.
+- **빠른 실행** — 즐겨찾기 목록. 아래의 **내 워크플로우 · Claude Code 디렉토리 · 자주 여는 곳**
+  각 항목에 있는 **⭐ 버튼으로 추가**한 것들을 모아 한 번에 실행합니다. 항목의 **✕**로 제거.
+  (기본 도구 프리셋은 더 이상 없고, 처음엔 비어 있습니다.)
 - **내 워크플로우** — "이름 / 경로 / 명령어"를 등록하면 [실행] 버튼으로 새 터미널에서 자동 실행.
   명령어를 비우면 해당 경로에서 셸만 엽니다.
 - **Claude Code 디렉토리** — Claude Code를 썼던 폴더별로 [셸] / [claude -c] / [Finder] 바로가기.
@@ -99,7 +100,7 @@ bin/install.sh             # 빌드 + /Applications/Jumpstart.app 설치  (= npm
   - **사용자 지정** — kitty·WezTerm·Alacritty·Warp 등을 명령 템플릿으로.
     치환자: `{{script}}` `{{dir}}` `{{cmd}}` `{{shell}}`
     (예: kitty `kitty {{script}}` · WezTerm `wezterm start -- {{script}}`)
-- **빠른 실행 도구** — 런처에 노출할 프리셋 체크. 미설치 도구는 회색 처리됩니다.
+- (빠른 실행은 설정이 아니라, 각 목록의 ⭐ 버튼으로 직접 추가합니다.)
 
 ## 데이터 저장 위치
 

@@ -3,6 +3,8 @@
 자주 쓰는 작업(서비스 올리기·로그 보기·`claude` 실행 등)을 **클릭 한 번**으로 터미널에서
 실행하는 macOS용 데스크탑 앱.
 
+![Jumpstart 화면](docs/screenshot.png)
+
 ## 왜 만들었나
 
 매번 터미널을 열고 → 프로젝트 폴더로 `cd` 하고 → 명령을 입력하는 반복이 번거로워서
@@ -67,6 +69,7 @@ bin/install.sh             # 빌드 + /Applications/Jumpstart.app 설치  (= npm
 | `bin/install.sh` | `.app` 빌드 후 `/Applications`에 설치 | `npm run app` |
 | `bin/build.sh` | 배포본(`.dmg`·`.zip`)을 `dist/`에 생성 | `npm run dmg` |
 | `bin/release.sh` | 빌드 + GitHub Release 생성·자산 업로드 | — |
+| `bin/screenshot.sh` | 데모 데이터로 스크린샷 PNG 생성 (개인정보 없음) | — |
 
 - `bin/build.sh` 결과물은 `dist/Jumpstart-<버전>-<칩>.dmg` 와 `.zip`. DMG는 macOS의 `hdiutil`을
   사용하므로 일반 터미널에서 실행하세요(제한된 셸에선 dmg가 실패할 수 있고, 그땐 zip이 대안).
@@ -76,6 +79,18 @@ bin/install.sh             # 빌드 + /Applications/Jumpstart.app 설치  (= npm
      (gh CLI 필요: `brew install gh && gh auth login`)
   3. 수동으로 하려면: GitHub → **Releases → Draft a new release** → 태그 만들고 `dist/`의 dmg/zip 첨부.
 - 받는 사람은 위 [다운로드해서 바로 쓰기](#다운로드해서-바로-쓰기-빌드-없이)의 Gatekeeper 안내를 따르면 됩니다.
+
+### 스크린샷 (데모 모드)
+
+README·소개 페이지용 스크린샷은 **데모 모드**로 만듭니다 — 실제 `~/.claude` 데이터 대신
+가공의 샘플(acme-web 등)을 띄워 **개인정보 노출 없이** 캡처합니다.
+
+```bash
+bin/screenshot.sh docs/screenshot.png   # 데모 데이터로 자동 캡처
+# 또는 직접 화면을 보며 찍기:
+JUMPSTART_DEMO=1 npm start               # 데모 데이터로 실행 → ⌘⇧4 로 캡처
+```
+표시 테마는 현재 설정값을 따릅니다(설정에서 테마를 바꾼 뒤 다시 캡처하면 됩니다).
 
 ## 사용법
 

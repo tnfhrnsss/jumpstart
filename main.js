@@ -608,8 +608,114 @@ function recordHistory(entry) {
   writeJSON(f, hist.slice(0, 100));
 }
 
+// ── 스크린샷용 데모 모드 (JUMPSTART_DEMO=1) ─────────────
+// 실제 ~/.claude 데이터 대신 가공의 샘플을 반환 → 개인정보 없이 스크린샷.
+const DEMO = process.env.JUMPSTART_DEMO === "1";
+const DEMO_NOW = Date.now();
+const dmin = (m) => DEMO_NOW - m * 60000;
+function demoScan() {
+  const mk = (p, sessions, agoMin) => ({
+    key: p,
+    realPath: p,
+    approx: false,
+    exists: true,
+    sessions,
+    lastUsed: dmin(agoMin),
+  });
+  return {
+    error: null,
+    hiddenCount: 2,
+    projects: [
+      mk("~/work/acme-web", 14, 6),
+      mk("~/work/payments-api", 8, 52),
+      mk("~/work/design-system", 5, 210),
+      mk("~/dev/side/recipe-app", 3, 1440),
+    ],
+  };
+}
+function demoGit(dir) {
+  const map = {
+    "~/work/acme-web": {
+      branch: "feature/checkout",
+      webUrl: "https://github.com/acme/web",
+      ahead: 2,
+      behind: 0,
+    },
+    "~/work/payments-api": {
+      branch: "main",
+      webUrl: "https://github.com/acme/payments-api",
+      ahead: 0,
+      behind: 0,
+    },
+    "~/work/design-system": {
+      branch: "main",
+      webUrl: "https://github.com/acme/design-system",
+      ahead: 0,
+      behind: 3,
+    },
+    "~/dev/side/recipe-app": {
+      branch: "main",
+      webUrl: null,
+      ahead: 0,
+      behind: 0,
+    },
+  };
+  const g = map[dir];
+  if (!g) return { isRepo: false };
+  return {
+    isRepo: true,
+    branch: g.branch,
+    remoteUrl: g.webUrl,
+    webUrl: g.webUrl,
+    lastCommitTs: dmin(g.ahead > 0 ? 30 : 90),
+    ahead: g.ahead,
+    behind: g.behind,
+    hasUpstream: !!g.webUrl,
+  };
+}
+function demoFrequent() {
+  const mk = (dir, count, agoMin) => ({
+    dir,
+    count,
+    lastUsed: dmin(agoMin),
+    exists: true,
+  });
+  return [
+    mk("~/work/acme-web", 37, 6),
+    mk("~/work/payments-api", 21, 52),
+    mk("~/work/design-system", 9, 210),
+    mk("/opt/homebrew/etc/nginx", 4, 600),
+  ];
+}
+const DEMO_BOOKMARKS = [
+  { id: 1, name: "웹 개발 서버", dir: "~/work/acme-web", cmd: "npm run dev" },
+  { id: 2, name: "결제 API 빌드", dir: "~/work/payments-api", cmd: "make run" },
+];
+const DEMO_FAVORITES = [
+  { id: 1, name: "웹 개발 서버", dir: "~/work/acme-web", cmd: "npm run dev" },
+  { id: 2, name: "acme-web", dir: "~/work/acme-web", cmd: "" },
+  { id: 3, name: "payments-api", dir: "~/work/payments-api", cmd: "" },
+];
+const DEMO_HISTORY = [
+  {
+    ts: dmin(4),
+    label: "웹 개발 서버",
+    dir: "~/work/acme-web",
+    cmd: "npm run dev",
+  },
+  {
+    ts: dmin(18),
+    label: "claude (~/work/payments-api)",
+    dir: "~/work/payments-api",
+    cmd: "claude -c",
+  },
+  { ts: dmin(95), label: "shell", dir: "~/work/design-system", cmd: "" },
+];
+
 // ── IPC ─────────────────────────────────────────────────
-ipcMain.handle("scan-projects", () => scanClaudeProjects());
+ipcMain.handle("scan-projects", () =>
+  DEMO ? demoScan() : scanClaudeProjects(),
+);
 ipcMain.handle("hide-project", (_e, key) => {
   const h = getHiddenProjects();
   if (key && !h.includes(key)) {
@@ -622,22 +728,26 @@ ipcMain.handle("unhide-all-projects", () => {
   setHiddenProjects([]);
   return true;
 });
-ipcMain.handle("frequent-dirs", () => frequentDirs());
-ipcMain.handle("git-info", (_e, dir) => gitInfo(dir));
+ipcMain.handle("frequent-dirs", () => (DEMO ? demoFrequent() : frequentDirs()));
+ipcMain.handle("git-info", (_e, dir) => (DEMO ? demoGit(dir) : gitInfo(dir)));
 ipcMain.handle("get-bookmarks", () =>
-  readJSON(userFile("bookmarks.json"), defaultBookmarks()),
+  DEMO
+    ? DEMO_BOOKMARKS
+    : readJSON(userFile("bookmarks.json"), defaultBookmarks()),
 );
 ipcMain.handle("save-bookmarks", (_e, list) => {
   writeJSON(userFile("bookmarks.json"), list);
   return true;
 });
-ipcMain.handle("get-quick-favorites", () => getQuickFavorites());
+ipcMain.handle("get-quick-favorites", () =>
+  DEMO ? DEMO_FAVORITES : getQuickFavorites(),
+);
 ipcMain.handle("save-quick-favorites", (_e, list) => {
   setQuickFavorites(list);
   return true;
 });
 ipcMain.handle("get-launch-history", () =>
-  readJSON(userFile("launch-history.json"), []),
+  DEMO ? DEMO_HISTORY : readJSON(userFile("launch-history.json"), []),
 );
 ipcMain.handle("launch", (_e, { dir, cmd, label }) => launch(dir, cmd, label));
 ipcMain.handle("open-claude", (_e, { dir, mode }) => {
@@ -690,10 +800,12 @@ function createWindow() {
     height: 760,
     title: "Jumpstart",
     icon: ICON_PATH,
+    show: !process.env.JUMPSTART_SHOT, // 캡처 모드에선 ready-to-show까지 숨김
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
+      backgroundThrottling: false, // 백그라운드여도 렌더 유지(캡처 빈 프레임 방지)
     },
   });
   win.loadFile("index.html");
@@ -703,6 +815,38 @@ function createWindow() {
       console.log(`[renderer:${level}] ${message} (${sourceId}:${line})`);
     },
   );
+  // 자동 캡처: JUMPSTART_SHOT=<png경로> 설정 시 렌더 후 캡처하고 종료
+  const shot = process.env.JUMPSTART_SHOT;
+  if (shot) {
+    win.once("ready-to-show", () => {
+      win.show();
+      win.focus();
+    });
+    win.webContents.once("did-finish-load", async () => {
+      try {
+        win.show();
+        win.focusOnWebView();
+        // 렌더러의 refreshAll 완료(data-ready) 신호를 최대 20초 대기
+        const deadline = Date.now() + 20000;
+        while (Date.now() < deadline) {
+          const ready = await win.webContents
+            .executeJavaScript("document.documentElement.dataset.ready === '1'")
+            .catch(() => false);
+          if (ready) break;
+          await new Promise((r) => setTimeout(r, 200));
+        }
+        await new Promise((r) => setTimeout(r, 900)); // git 배지 등 마무리
+        await win.webContents.capturePage(); // 1차: 페인트 유도
+        await new Promise((r) => setTimeout(r, 350));
+        const img = await win.webContents.capturePage(); // 2차: 실제 저장
+        fs.writeFileSync(shot, img.toPNG());
+        console.log("screenshot saved:", shot);
+      } catch (e) {
+        console.error("screenshot 실패:", e);
+      }
+      app.quit();
+    });
+  }
 }
 
 app.whenReady().then(() => {

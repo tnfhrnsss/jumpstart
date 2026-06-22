@@ -24,7 +24,8 @@ npm run app        # .app 빌드 + /Applications/Jumpstart.app 설치  ← 배�
 npm run dist       # dist/mac-*/Jumpstart.app 만 생성
 npm run dmg        # 배포용 dmg
 ```
-- 빌드 스크립트는 `bin/` 에도 있음(npm 스크립트와 동일): `bin/install.sh`(=app), `bin/build.sh`(=dmg+zip), `bin/release.sh`(빌드+gh로 GitHub Release). README "빌드 / 배포" 참고.
+- 빌드 스크립트는 `bin/` 에도 있음(npm 스크립트와 동일): `bin/install.sh`(=app), `bin/build.sh`(=dmg+zip), `bin/release.sh`(빌드+gh로 GitHub Release), `bin/screenshot.sh`(데모 데이터로 PNG 캡처). README "빌드 / 배포" 참고.
+- **스크린샷/데모용 환경변수**(`main.js`): `JUMPSTART_DEMO=1` → 실제 `~/.claude` 대신 가공 샘플 데이터(IPC 핸들러에서 분기). `JUMPSTART_SHOT=<png>` → 렌더 완료(`data-ready`) 대기 후 `capturePage`로 저장하고 종료. 둘은 독립적이며 보통 함께 씀.
 - **개발 모드(`npm start`)와 설치된 .app은 별개.** 코드 수정 후 설치본에 반영하려면 반드시 `npm run app`(또는 `bin/install.sh`) 재실행.
 - 코드 서명 없음(`build.mac.identity: null`, 개인용). 다른 맥으로 .app/dmg/zip을 받으면 Gatekeeper가 막을 수 있음 → `xattr -dr com.apple.quarantine`.
 - DMG 생성은 `hdiutil` 사용 → 제한된 셸(샌드박스/CI)에선 실패할 수 있고, 그땐 `.zip` 산출물이 대안.

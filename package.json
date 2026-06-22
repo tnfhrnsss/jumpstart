@@ -21,6 +21,8 @@
       "preload.js",
       "renderer.js",
       "index.html",
+      "locales/**",
+      "meta.json",
       "assets/icon.png",
       "package.json"
     ],

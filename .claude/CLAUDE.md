@@ -23,8 +23,11 @@ npm run app        # .app 빌드 + /Applications/Jumpstart.app 설치  ← 배�
 npm run dist       # dist/mac-*/Jumpstart.app 만 생성
 npm run dmg        # 배포용 dmg
 ```
-- **개발 모드(`npm start`)와 설치된 .app은 별개.** 코드 수정 후 설치본에 반영하려면 반드시 `npm run app` 재실행.
-- 코드 서명 없음(`build.mac.identity: null`, 개인용). 다른 맥으로 .app만 복사하면 Gatekeeper가 막을 수 있음 → `xattr -dr com.apple.quarantine`.
+- 빌드 스크립트는 `bin/` 에도 있음(npm 스크립트와 동일): `bin/install.sh`(=app), `bin/build.sh`(=dmg+zip), `bin/release.sh`(빌드+gh로 GitHub Release). README "빌드 / 배포" 참고.
+- **개발 모드(`npm start`)와 설치된 .app은 별개.** 코드 수정 후 설치본에 반영하려면 반드시 `npm run app`(또는 `bin/install.sh`) 재실행.
+- 코드 서명 없음(`build.mac.identity: null`, 개인용). 다른 맥으로 .app/dmg/zip을 받으면 Gatekeeper가 막을 수 있음 → `xattr -dr com.apple.quarantine`.
+- DMG 생성은 `hdiutil` 사용 → 제한된 셸(샌드박스/CI)에선 실패할 수 있고, 그땐 `.zip` 산출물이 대안.
+- 배포 자산 링크는 버전에 따라 파일명이 바뀌므로 `releases/latest` 페이지로 링크(README·docs).
 
 ## 작업 시 주의사항 (실제로 겪은 함정들)
 - **IPC를 추가하면 3곳 모두 손봐야 함**: `main.js`의 `ipcMain.handle(...)` + `preload.js`의 `window.api` 노출 + `renderer.js` 호출. preload 노출을 빠뜨리면 `window.api.X is not a function`으로 터짐.

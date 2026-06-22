@@ -43,7 +43,44 @@ function defaultSettings() {
     // 커스텀 터미널 명령 템플릿. 치환자: {{script}} {{dir}} {{cmd}} {{shell}}
     customCommand: "",
     theme: "charcoal",
+    lang: "ko", // ko | en
   };
+}
+// 앱 메타정보(만든이/저작권/마지막 패치일/리비전)는 meta.json 한 곳에서 관리.
+// 버전은 빌드 기준인 package.json이 정본이므로 app.getVersion()에서 읽는다.
+function getAppInfo() {
+  const meta = readJSON(path.join(__dirname, "meta.json"), {});
+  return { version: app.getVersion(), ...meta };
+}
+// macOS 상단 앱 메뉴 "About Jumpstart"가 여는 네이티브 정보 패널을 채운다.
+// (설정 패널의 About과는 별개. 언어 설정에 맞춰 표기를 바꾼다.)
+function applyAboutPanel() {
+  const m = getAppInfo();
+  const ko = getSettings().lang !== "en";
+  const L = ko
+    ? { maker: "만든이", last: "마지막 패치", rev: "리비전" }
+    : { maker: "Maker", last: "Last patch", rev: "Revision" };
+  const note = ko
+    ? "버그·장애·개선 요청은 GitHub Issues로 남겨 주세요."
+    : "Please report bugs and feature requests via GitHub Issues.";
+  const credits = [
+    m.maker ? `${L.maker} · ${m.maker}` : "",
+    m.lastPatch
+      ? `${L.last} · ${m.lastPatch}${m.revision ? ` (${L.rev} ${m.revision})` : ""}`
+      : "",
+    m.github || "",
+    note,
+  ]
+    .filter(Boolean)
+    .join("\n");
+  app.setAboutPanelOptions({
+    applicationName: "Jumpstart",
+    applicationVersion: m.version,
+    version: m.revision || "",
+    copyright: m.copyright ? `© ${m.copyright}` : "",
+    credits,
+    iconPath: ICON_PATH,
+  });
 }
 function getSettings() {
   return { ...defaultSettings(), ...readJSON(userFile("settings.json"), {}) };
@@ -153,7 +190,12 @@ function scanClaudeProjects() {
       .readdirSync(PROJECTS_DIR, { withFileTypes: true })
       .filter((d) => d.isDirectory());
   } catch {
-    return { error: `${PROJECTS_DIR} 를 읽을 수 없습니다.`, projects: [] };
+    return {
+      error: "err.projectsUnreadable",
+      errorPath: PROJECTS_DIR,
+      projects: [],
+      hiddenCount: 0,
+    };
   }
   const hidden = getHiddenProjects();
   const projects = [];
@@ -522,11 +564,13 @@ ipcMain.handle("open-external", (_e, url) => {
 ipcMain.handle("get-settings", () => getSettings());
 ipcMain.handle("save-settings", (_e, s) => {
   writeJSON(userFile("settings.json"), { ...defaultSettings(), ...s });
+  applyAboutPanel(); // 언어가 바뀌면 네이티브 About 패널 표기도 갱신
   return true;
 });
 ipcMain.handle("detect-terminals", () => detectTerminals());
 ipcMain.handle("detect-presets", () => detectPresets());
 ipcMain.handle("app-version", () => app.getVersion());
+ipcMain.handle("app-info", () => getAppInfo());
 
 function defaultBookmarks() {
   // 도구별(도커/MySQL 등) 빠른 실행은 설정의 "프리셋"으로 분리.
@@ -566,6 +610,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  applyAboutPanel(); // 상단 메뉴 "About Jumpstart" 패널 내용 설정
   // 개발 실행(electron .)에서도 Dock 아이콘을 우리 아이콘으로 교체
   if (process.platform === "darwin" && app.dock) {
     try {

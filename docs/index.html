@@ -234,8 +234,19 @@
           디렉토리 대시보드 (macOS)
         </p>
         <div class="btns">
-          <a class="btn primary" href="#install">설치하기</a>
-          <a class="btn" href="https://github.com/tnfhrnsss/jumpstart"
+          <a
+            class="btn primary"
+            href="https://github.com/tnfhrnsss/jumpstart/releases/latest"
+            target="_blank"
+            rel="noopener noreferrer"
+            >다운로드 (macOS)</a
+          >
+          <a class="btn" href="#install">소스에서 빌드</a>
+          <a
+            class="btn"
+            href="https://github.com/tnfhrnsss/jumpstart"
+            target="_blank"
+            rel="noopener noreferrer"
             >GitHub에서 보기</a
           >
         </div>
@@ -296,12 +307,46 @@
       </div>
     </section>
 
+    <section id="download">
+      <div class="wrap">
+        <h2>다운로드해서 바로 쓰기</h2>
+        <p style="color: var(--muted); margin-top: -8px">
+          요구 환경: <b>macOS 전용</b> (Apple Silicon·Intel) · Java·Node 등
+          <b>별도 설치 불필요</b> — 받아서 바로 실행됩니다.
+        </p>
+        <ol class="steps">
+          <li>
+            <a
+              href="https://github.com/tnfhrnsss/jumpstart/releases/latest"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Releases</a
+            >
+            에서 최신 <code>.dmg</code>(또는 <code>.zip</code>) 받기
+          </li>
+          <li>
+            dmg는 열어서 <code>Jumpstart.app</code>을
+            <code>Applications</code>로 드래그 (zip은 풀어서 옮기기)
+          </li>
+        </ol>
+        <div class="note">
+          ⚠️ 코드 서명이 없어(개인용) 첫 실행 때 “확인되지 않은 개발자” 경고가
+          뜰 수 있습니다 → <code>Jumpstart.app</code> <b>우클릭 → 열기</b>(최초
+          1회), 또는
+          <code>xattr -dr com.apple.quarantine /Applications/Jumpstart.app</code
+          >.
+        </div>
+      </div>
+    </section>
+
     <section id="install">
       <div class="wrap">
-        <h2>설치하기</h2>
+        <h2>소스에서 빌드하기 (개발자용)</h2>
         <p style="color: var(--muted); margin-top: -8px">
           필요 환경: <b>macOS</b> · <b>Node.js 18+</b> (<a
             href="https://nodejs.org"
+            target="_blank"
+            rel="noopener noreferrer"
             >nodejs.org</a
           >
           또는 <code>brew install node</code>)
@@ -341,7 +386,10 @@ npm run app      # → /Applications/Jumpstart.app 설치</code></pre>
     <footer>
       <div class="wrap">
         Made by <b>jj</b> ·
-        <a href="https://github.com/tnfhrnsss/jumpstart"
+        <a
+          href="https://github.com/tnfhrnsss/jumpstart"
+          target="_blank"
+          rel="noopener noreferrer"
           >github.com/tnfhrnsss/jumpstart</a
         >
       </div>

@@ -18,4 +18,5 @@ contextBridge.exposeInMainWorld("api", {
   detectTerminals: () => ipcRenderer.invoke("detect-terminals"),
   detectPresets: () => ipcRenderer.invoke("detect-presets"),
   appVersion: () => ipcRenderer.invoke("app-version"),
+  appInfo: () => ipcRenderer.invoke("app-info"),
 });

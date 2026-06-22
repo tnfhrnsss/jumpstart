@@ -1,12 +1,43 @@
 const $ = (id) => document.getElementById(id);
 
+// ── i18n (리소스는 locales/ko.js · locales/en.js) ──────
+let lang = "ko";
+function t(key, vars) {
+  const dict = (window.I18N && window.I18N[lang]) || {};
+  const fb = (window.I18N && window.I18N.ko) || {};
+  let s = dict[key] != null ? dict[key] : fb[key] != null ? fb[key] : key;
+  if (vars)
+    s = s.replace(/\{(\w+)\}/g, (m, k) => (vars[k] != null ? vars[k] : m));
+  return s;
+}
+// index.html의 정적 문자열 치환 (data-i18n / -html / -ph / -title)
+function applyStaticI18n(root = document) {
+  root
+    .querySelectorAll("[data-i18n]")
+    .forEach((el) => (el.textContent = t(el.dataset.i18n)));
+  root
+    .querySelectorAll("[data-i18n-html]")
+    .forEach((el) => (el.innerHTML = t(el.dataset.i18nHtml)));
+  root
+    .querySelectorAll("[data-i18n-ph]")
+    .forEach((el) => (el.placeholder = t(el.dataset.i18nPh)));
+  root
+    .querySelectorAll("[data-i18n-title]")
+    .forEach((el) => (el.title = t(el.dataset.i18nTitle)));
+}
+function applyLang(l) {
+  lang = l === "en" ? "en" : "ko";
+  document.documentElement.lang = lang;
+  applyStaticI18n();
+}
+
 function timeAgo(ms) {
-  if (!ms) return "기록 없음";
+  if (!ms) return t("time.noRecord");
   const s = Math.floor((Date.now() - ms) / 1000);
-  if (s < 60) return "방금";
-  if (s < 3600) return `${Math.floor(s / 60)}분 전`;
-  if (s < 86400) return `${Math.floor(s / 3600)}시간 전`;
-  return `${Math.floor(s / 86400)}일 전`;
+  if (s < 60) return t("time.justNow");
+  if (s < 3600) return t("time.minAgo", { n: Math.floor(s / 60) });
+  if (s < 86400) return t("time.hourAgo", { n: Math.floor(s / 3600) });
+  return t("time.dayAgo", { n: Math.floor(s / 86400) });
 }
 function esc(s) {
   const d = document.createElement("div");
@@ -16,34 +47,29 @@ function esc(s) {
 // 실행 후 결과 확인: 실패하면 알림 + 항상 히스토리 갱신
 async function doLaunch(payload) {
   const r = await window.api.launch(payload);
-  if (r && r.ok === false) alert("터미널 실행 실패:\n" + (r.error || ""));
+  if (r && r.ok === false)
+    alert(t("alert.launchFail") + "\n" + (r.error || ""));
   refreshHistory();
 }
 async function doClaude(payload) {
   const r = await window.api.openClaude(payload);
-  if (r && r.ok === false) alert("실행 실패:\n" + (r.error || ""));
+  if (r && r.ok === false) alert(t("alert.runFail") + "\n" + (r.error || ""));
   refreshHistory();
 }
 
-// ── 정보(About) — 이 값만 본인 정보로 수정하면 됩니다 ──
-const ABOUT = {
-  maker: "jj", // 만든이
-  github: "https://github.com/tnfhrnsss/jumpstart", // ← 실제 GitHub 저장소 주소로 수정
-  note: "버그·장애·개선 요청은 GitHub Issues로 남겨 주세요.", // 안내 문구 (없으면 "")
-};
+// ── 정보(About) — 값은 meta.json + package.json(버전)에서 읽음 ──
 async function renderAbout() {
-  let ver = "";
+  let a = {};
   try {
-    ver = await window.api.appVersion();
+    a = await window.api.appInfo();
   } catch {}
-  const a = ABOUT;
-  const lines = [`<b>Jumpstart</b>${ver ? " v" + esc(ver) : ""}`];
-  if (a.maker) lines.push(`만든이 · <b>${esc(a.maker)}</b>`);
+  const lines = [`<b>Jumpstart</b>${a.version ? " v" + esc(a.version) : ""}`];
+  if (a.maker) lines.push(`${esc(t("about.maker"))} · <b>${esc(a.maker)}</b>`);
   if (a.github)
     lines.push(
       `GitHub · <a data-url="${esc(a.github)}">${esc(a.github.replace(/^https?:\/\//, ""))}</a>`,
     );
-  if (a.note) lines.push(esc(a.note));
+  lines.push(esc(t("about.note")));
   const box = $("about");
   box.innerHTML = lines.join("<br>");
   const link = box.querySelector("a[data-url]");
@@ -138,9 +164,9 @@ const THEMES = {
   },
 };
 function applyTheme(id) {
-  const t = THEMES[id] || THEMES.charcoal;
+  const th = THEMES[id] || THEMES.charcoal;
   const root = document.documentElement.style;
-  for (const k in t) if (k.startsWith("--")) root.setProperty(k, t[k]);
+  for (const k in th) if (k.startsWith("--")) root.setProperty(k, th[k]);
 }
 
 // ── 설정 ───────────────────────────────────────────────
@@ -151,10 +177,10 @@ let presets = [];
 $("toggle-settings").onclick = () => $("settings").classList.toggle("open");
 
 function syncTerminalFields() {
-  const t = $("set-terminal").value;
-  $("field-tabby").style.display = t === "tabby" ? "" : "none";
-  $("field-custom").style.display = t === "custom" ? "" : "none";
-  $("hint-custom").style.display = t === "custom" ? "" : "none";
+  const v = $("set-terminal").value;
+  $("field-tabby").style.display = v === "tabby" ? "" : "none";
+  $("field-custom").style.display = v === "custom" ? "" : "none";
+  $("hint-custom").style.display = v === "custom" ? "" : "none";
 }
 
 async function renderSettings() {
@@ -162,13 +188,31 @@ async function renderSettings() {
   terminals = await window.api.detectTerminals();
   presets = await window.api.detectPresets();
 
+  // 언어
+  const lsel = $("set-lang");
+  lsel.innerHTML = "";
+  for (const [id, label] of [
+    ["ko", "한국어"],
+    ["en", "English"],
+  ]) {
+    const o = document.createElement("option");
+    o.value = id;
+    o.textContent = label; // 언어명은 각 언어로 고정 표기
+    lsel.appendChild(o);
+  }
+  lsel.value = lang;
+  lsel.onchange = () => {
+    applyLang(lsel.value); // 즉시 미리보기 + 동적 영역 다시 렌더
+    refreshAll();
+  };
+
   // 테마
   const tsel = $("set-theme");
   tsel.innerHTML = "";
   for (const id in THEMES) {
     const o = document.createElement("option");
     o.value = id;
-    o.textContent = THEMES[id].name;
+    o.textContent = t("theme." + id);
     tsel.appendChild(o);
   }
   tsel.value = settings.theme || "charcoal";
@@ -178,17 +222,18 @@ async function renderSettings() {
   // 터미널 선택
   const sel = $("set-terminal");
   sel.innerHTML = "";
-  for (const t of terminals) {
+  for (const term of terminals) {
     const o = document.createElement("option");
-    o.value = t.id;
-    o.textContent = t.available ? t.name : `${t.name} (미설치)`;
-    o.disabled = !t.available;
+    o.value = term.id;
+    const name = t("term." + term.id);
+    o.textContent = term.available ? name : `${name} ${t("term.notInstalled")}`;
+    o.disabled = !term.available;
     sel.appendChild(o);
   }
   // 커스텀은 항상 선택 가능
   const co = document.createElement("option");
   co.value = "custom";
-  co.textContent = "사용자 지정 (직접 명령)";
+  co.textContent = t("term.custom");
   sel.appendChild(co);
   sel.value = settings.terminal || "terminal-app";
   sel.onchange = syncTerminalFields;
@@ -205,8 +250,9 @@ async function renderSettings() {
     const on = enabled == null ? p.available : enabled.includes(p.id);
     const lab = document.createElement("label");
     lab.style.opacity = p.available ? "" : "0.45";
+    const notInstalled = p.available ? "" : "  " + t("term.notInstalled");
     lab.innerHTML = `<input type="checkbox" data-preset="${p.id}" ${on ? "checked" : ""} ${p.available ? "" : "disabled"} />
-      <span>${esc(p.name)} <span style="color:var(--muted);font-size:11px">· ${esc(p.cmd)}${p.available ? "" : "  (미설치)"}</span></span>`;
+      <span>${esc(t("preset." + p.id))} <span style="color:var(--muted);font-size:11px">· ${esc(p.cmd)}${esc(notInstalled)}</span></span>`;
     box.appendChild(lab);
   }
 }
@@ -216,6 +262,7 @@ $("set-save").onclick = async () => {
     $("set-presets").querySelectorAll("input[data-preset]:checked"),
   ).map((c) => c.dataset.preset);
   await window.api.saveSettings({
+    lang: $("set-lang").value,
     theme: $("set-theme").value,
     terminal: $("set-terminal").value,
     tabbyPath: $("set-tabby").value.trim(),
@@ -234,7 +281,7 @@ function renderQuick() {
     return enabled == null ? true : enabled.includes(p.id);
   });
   $("quick-section").style.display = list.length ? "" : "none";
-  $("quick-count").textContent = `${list.length}개`;
+  $("quick-count").textContent = t("count.items", { n: list.length });
   const box = $("quick");
   box.innerHTML = "";
   for (const p of list) {
@@ -242,18 +289,18 @@ function renderQuick() {
     el.className = "row";
     el.innerHTML = `
       <div class="main">
-        <div class="path">${esc(p.name)}</div>
+        <div class="path">${esc(t("preset." + p.id))}</div>
         <div class="meta">${esc(p.dir)}  ·  ${esc(p.cmd)}</div>
       </div>
       <div class="actions">
-        <button class="primary" data-q="${p.id}">실행</button>
+        <button class="primary" data-q="${p.id}">${esc(t("btn.run"))}</button>
       </div>`;
     box.appendChild(el);
   }
   box.querySelectorAll("[data-q]").forEach((btn) => {
     btn.onclick = () => {
       const p = presets.find((x) => x.id === btn.dataset.q);
-      doLaunch({ dir: p.dir, cmd: p.cmd, label: p.name });
+      doLaunch({ dir: p.dir, cmd: p.cmd, label: t("preset." + p.id) });
     };
   });
 }
@@ -262,11 +309,11 @@ function renderQuick() {
 let bookmarks = [];
 async function renderBookmarks() {
   bookmarks = await window.api.getBookmarks();
-  $("bm-count").textContent = `${bookmarks.length}개`;
+  $("bm-count").textContent = t("count.items", { n: bookmarks.length });
   const box = $("bookmarks");
   box.innerHTML = bookmarks.length
     ? ""
-    : '<div class="empty">아래에서 워크플로우를 추가하세요.</div>';
+    : `<div class="empty">${esc(t("empty.workflow"))}</div>`;
   for (const b of bookmarks) {
     const el = document.createElement("div");
     el.className = "row";
@@ -276,8 +323,8 @@ async function renderBookmarks() {
         <div class="meta">${esc(b.dir)}${b.cmd ? "  ·  " + esc(b.cmd) : ""}</div>
       </div>
       <div class="actions">
-        <button class="primary" data-run="${b.id}">실행</button>
-        <button class="del" data-del="${b.id}">삭제</button>
+        <button class="primary" data-run="${b.id}">${esc(t("btn.run"))}</button>
+        <button class="del" data-del="${b.id}">${esc(t("btn.delete"))}</button>
       </div>`;
     box.appendChild(el);
   }
@@ -330,33 +377,36 @@ function wireDirButtons(box) {
 
 // ── Claude Code 디렉토리 ───────────────────────────────
 async function renderProjects() {
-  const { error, projects, hiddenCount } = await window.api.scanProjects();
+  const { error, errorPath, projects, hiddenCount } =
+    await window.api.scanProjects();
   const box = $("projects");
-  $("proj-count").textContent = error ? "" : `${projects.length}곳`;
+  $("proj-count").textContent = error
+    ? ""
+    : t("count.places", { n: projects.length });
   if (error) {
-    box.innerHTML = `<div class="empty">${esc(error)}</div>`;
+    box.innerHTML = `<div class="empty">${esc(t(error, { path: errorPath }))}</div>`;
     return;
   }
   box.innerHTML = projects.length
     ? ""
-    : '<div class="empty">아직 Claude Code 기록이 없습니다.</div>';
+    : `<div class="empty">${esc(t("empty.projects"))}</div>`;
   for (const p of projects) {
     const el = document.createElement("div");
     el.className = "row";
     el.innerHTML = `
       <div class="main">
         <div class="path ${p.exists ? "" : "missing"}">${esc(p.realPath)}
-          ${p.approx ? '<span class="pill">추정경로</span>' : ""}
-          ${p.exists ? "" : '<span class="pill missing">없음</span>'}
+          ${p.approx ? `<span class="pill">${esc(t("pill.approx"))}</span>` : ""}
+          ${p.exists ? "" : `<span class="pill missing">${esc(t("pill.missing"))}</span>`}
         </div>
-        <div class="meta">세션 ${p.sessions}개 · 마지막 ${timeAgo(p.lastUsed)}</div>
+        <div class="meta">${esc(t("proj.meta", { n: p.sessions, ago: timeAgo(p.lastUsed) }))}</div>
         <div class="gitline" data-git="${esc(p.realPath)}"></div>
       </div>
       <div class="actions">
-        <button data-shell="${esc(p.realPath)}">셸</button>
-        <button class="primary" data-resume="${esc(p.realPath)}">claude -c</button>
-        <button data-finder="${esc(p.realPath)}">Finder</button>
-        <button class="del" data-hide="${esc(p.key)}" title="목록에서 숨기기">✕</button>
+        <button data-shell="${esc(p.realPath)}">${esc(t("btn.shell"))}</button>
+        <button class="primary" data-resume="${esc(p.realPath)}">${esc(t("btn.claudeC"))}</button>
+        <button data-finder="${esc(p.realPath)}">${esc(t("btn.finder"))}</button>
+        <button class="del" data-hide="${esc(p.key)}" title="${esc(t("hide.title"))}">✕</button>
       </div>`;
     box.appendChild(el);
   }
@@ -364,7 +414,7 @@ async function renderProjects() {
   if (hiddenCount > 0) {
     const el = document.createElement("div");
     el.className = "empty";
-    el.innerHTML = `숨긴 항목 ${hiddenCount}개 · <a class="restore">모두 표시</a>`;
+    el.innerHTML = `${esc(t("hidden.restore", { n: hiddenCount }))}<a class="restore">${esc(t("hidden.showAll"))}</a>`;
     box.appendChild(el);
     el.querySelector(".restore").onclick = async () => {
       await window.api.unhideAllProjects();
@@ -391,23 +441,28 @@ async function renderProjects() {
 async function renderFrequent() {
   const dirs = await window.api.frequentDirs();
   $("frequent-section").style.display = dirs.length ? "" : "none";
-  $("freq-count").textContent = dirs.length ? `${dirs.length}곳` : "";
+  $("freq-count").textContent = dirs.length
+    ? t("count.places", { n: dirs.length })
+    : "";
   const box = $("frequent");
   box.innerHTML = "";
   for (const d of dirs) {
     const el = document.createElement("div");
     el.className = "row";
+    const meta =
+      t("freq.access", { n: d.count }) +
+      (d.lastUsed ? t("time.lastSuffix", { ago: timeAgo(d.lastUsed) }) : "");
     el.innerHTML = `
       <div class="main">
         <div class="path ${d.exists ? "" : "missing"}">${esc(d.dir)}
-          ${d.exists ? "" : '<span class="pill missing">없음</span>'}
+          ${d.exists ? "" : `<span class="pill missing">${esc(t("pill.missing"))}</span>`}
         </div>
-        <div class="meta">${d.count}회 접근${d.lastUsed ? " · 마지막 " + timeAgo(d.lastUsed) : ""}</div>
+        <div class="meta">${esc(meta)}</div>
       </div>
       <div class="actions">
-        <button data-shell="${esc(d.dir)}">셸</button>
-        <button class="primary" data-resume="${esc(d.dir)}">claude -c</button>
-        <button data-finder="${esc(d.dir)}">Finder</button>
+        <button data-shell="${esc(d.dir)}">${esc(t("btn.shell"))}</button>
+        <button class="primary" data-resume="${esc(d.dir)}">${esc(t("btn.claudeC"))}</button>
+        <button data-finder="${esc(d.dir)}">${esc(t("btn.finder"))}</button>
       </div>`;
     box.appendChild(el);
   }
@@ -432,18 +487,23 @@ async function loadGit(dir) {
   } else if (g.remoteUrl) {
     parts.push(`<span class="repo">${esc(g.remoteUrl)}</span>`);
   } else {
-    parts.push('<span class="badge">로컬 전용</span>');
+    parts.push(`<span class="badge">${esc(t("git.localOnly"))}</span>`);
   }
   if (g.branch) parts.push(`<span class="badge">${esc(g.branch)}</span>`);
-  if (g.lastCommitTs) parts.push(`마지막 커밋 ${timeAgo(g.lastCommitTs)}`);
+  if (g.lastCommitTs)
+    parts.push(esc(t("git.lastCommit", { ago: timeAgo(g.lastCommitTs) })));
   if (g.hasUpstream) {
     if (g.ahead > 0)
-      parts.push(`<span class="badge warn">미푸시 ${g.ahead}커밋</span>`);
-    else parts.push(`<span class="badge ok">푸시 완료</span>`);
+      parts.push(
+        `<span class="badge warn">${esc(t("git.unpushed", { n: g.ahead }))}</span>`,
+      );
+    else parts.push(`<span class="badge ok">${esc(t("git.pushed"))}</span>`);
     if (g.behind > 0)
-      parts.push(`<span class="badge">원격이 ${g.behind} 앞섬</span>`);
+      parts.push(
+        `<span class="badge">${esc(t("git.behind", { n: g.behind }))}</span>`,
+      );
   } else if (g.webUrl || g.remoteUrl) {
-    parts.push('<span class="badge">업스트림 미설정</span>');
+    parts.push(`<span class="badge">${esc(t("git.noUpstream"))}</span>`);
   }
   el.innerHTML = parts.join(" ");
   const link = el.querySelector(".repo[data-url]");
@@ -464,15 +524,16 @@ async function refreshHistory() {
   const box = $("history");
   box.innerHTML = hist.length
     ? ""
-    : '<div class="empty">아직 실행 기록이 없습니다.</div>';
+    : `<div class="empty">${esc(t("empty.history"))}</div>`;
+  const locale = lang === "en" ? "en-US" : "ko-KR";
   for (const h of hist.slice(0, 20)) {
     const el = document.createElement("div");
     el.className = "hist";
-    const t = new Date(h.ts).toLocaleTimeString("ko-KR", {
+    const hhmm = new Date(h.ts).toLocaleTimeString(locale, {
       hour: "2-digit",
       minute: "2-digit",
     });
-    el.innerHTML = `${t}  <b>${esc(h.label)}</b>  ${esc(h.dir)}${h.cmd ? "  $ " + esc(h.cmd) : ""}`;
+    el.innerHTML = `${hhmm}  <b>${esc(h.label)}</b>  ${esc(h.dir)}${h.cmd ? "  $ " + esc(h.cmd) : ""}`;
     box.appendChild(el);
   }
 }
@@ -498,11 +559,14 @@ async function refreshAll() {
 }
 $("refresh").onclick = refreshAll;
 
-// 저장된 테마를 먼저 적용해 깜빡임 방지 → 이후 전체 렌더
+// 저장된 테마·언어를 먼저 적용해 깜빡임 방지 → 이후 전체 렌더
 (async () => {
   try {
     const s = await window.api.getSettings();
     applyTheme(s.theme);
-  } catch {}
+    applyLang(s.lang);
+  } catch {
+    applyLang("ko");
+  }
   refreshAll();
 })();

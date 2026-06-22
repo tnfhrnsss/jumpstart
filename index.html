@@ -303,37 +303,58 @@
     <div class="toprow">
       <div>
         <h1>⚡ Jumpstart</h1>
-        <div class="sub">
+        <div class="sub" data-i18n="app.sub">
           반복 업무를 클릭 한 번으로 — 터미널 런처 + Claude Code 대시보드
         </div>
       </div>
       <div style="display: flex; gap: 6px">
-        <button id="refresh">새로고침</button>
-        <button id="toggle-settings" class="iconbtn" title="설정">⚙︎</button>
+        <button id="refresh" data-i18n="btn.refresh">새로고침</button>
+        <button
+          id="toggle-settings"
+          class="iconbtn"
+          data-i18n-title="title.settings"
+          title="설정"
+        >
+          ⚙︎
+        </button>
       </div>
     </div>
 
     <div class="settings" id="settings">
       <div class="field">
-        <label>화면 테마</label>
+        <label data-i18n="set.lang">언어</label>
+        <select id="set-lang"></select>
+      </div>
+      <div class="field">
+        <label data-i18n="set.theme">화면 테마</label>
         <select id="set-theme"></select>
       </div>
       <div class="field">
-        <label>터미널 앱</label>
+        <label data-i18n="set.terminal">터미널 앱</label>
         <select id="set-terminal"></select>
       </div>
       <div class="field" id="field-tabby" style="display: none">
-        <label>Tabby 경로</label>
+        <label data-i18n="set.tabbyPath">Tabby 경로</label>
         <input
           id="set-tabby"
+          data-i18n-ph="ph.tabby"
           placeholder="/Applications/Tabby.app/Contents/MacOS/Tabby"
         />
       </div>
       <div class="field" id="field-custom" style="display: none">
-        <label>커스텀 명령</label>
-        <input id="set-custom" placeholder="예: kitty {{script}}" />
+        <label data-i18n="set.customCmd">커스텀 명령</label>
+        <input
+          id="set-custom"
+          data-i18n-ph="ph.custom"
+          placeholder="예: kitty {{script}}"
+        />
       </div>
-      <div class="hint" id="hint-custom" style="display: none">
+      <div
+        class="hint"
+        id="hint-custom"
+        data-i18n-html="set.customHint"
+        style="display: none"
+      >
         새 터미널을 여는 명령을 입력하세요. 치환자:
         <code>{{script}}</code> (cd+명령이 담긴 실행 스크립트 경로),
         <code>{{dir}}</code>, <code>{{cmd}}</code>,
@@ -343,21 +364,21 @@
         <code>alacritty -e {{script}}</code>
       </div>
       <div class="field" style="align-items: flex-start">
-        <label>빠른 실행 도구</label>
+        <label data-i18n="set.presets">빠른 실행 도구</label>
         <div id="set-presets" style="flex: 1"></div>
       </div>
-      <div class="hint">
+      <div class="hint" data-i18n="set.presetsHint">
         체크한 도구만 "빠른 실행"에 버튼으로 나옵니다. (회색 =이 PC에 미설치)
       </div>
       <div style="text-align: right">
-        <button class="primary" id="set-save">저장</button>
+        <button class="primary" id="set-save" data-i18n="btn.save">저장</button>
       </div>
       <div class="about" id="about"></div>
     </div>
 
     <div class="section" id="quick-section" style="display: none">
       <div class="section-head">
-        <h2>빠른 실행</h2>
+        <h2 data-i18n="sec.quick">빠른 실행</h2>
         <span class="count" id="quick-count"></span>
       </div>
       <div id="quick"></div>
@@ -365,25 +386,36 @@
 
     <div class="section">
       <div class="section-head">
-        <h2>내 워크플로우</h2>
+        <h2 data-i18n="sec.workflow">내 워크플로우</h2>
         <span class="count" id="bm-count"></span>
       </div>
       <div id="bookmarks"></div>
       <div class="form">
-        <input class="name" id="bm-name" placeholder="이름" />
+        <input
+          class="name"
+          id="bm-name"
+          data-i18n-ph="ph.bmName"
+          placeholder="이름"
+        />
         <input
           class="dir"
           id="bm-dir"
+          data-i18n-ph="ph.bmDir"
           placeholder="경로 (예: ~/Documents/proj)"
         />
-        <input class="cmd" id="bm-cmd" placeholder="명령어 (비우면 셸만)" />
-        <button class="primary" id="bm-add">추가</button>
+        <input
+          class="cmd"
+          id="bm-cmd"
+          data-i18n-ph="ph.bmCmd"
+          placeholder="명령어 (비우면 셸만)"
+        />
+        <button class="primary" id="bm-add" data-i18n="btn.add">추가</button>
       </div>
     </div>
 
     <div class="section">
       <div class="section-head">
-        <h2>Claude Code 디렉토리</h2>
+        <h2 data-i18n="sec.projects">Claude Code 디렉토리</h2>
         <span class="count" id="proj-count"></span>
       </div>
       <div id="projects"></div>
@@ -391,17 +423,19 @@
 
     <div class="section" id="frequent-section" style="display: none">
       <div class="section-head">
-        <h2>자주 여는 곳</h2>
+        <h2 data-i18n="sec.frequent">자주 여는 곳</h2>
         <span class="count" id="freq-count"></span>
       </div>
       <div id="frequent"></div>
     </div>
 
     <div class="section">
-      <div class="section-head"><h2>최근 실행</h2></div>
+      <div class="section-head"><h2 data-i18n="sec.history">최근 실행</h2></div>
       <div id="history"></div>
     </div>
 
+    <script src="locales/ko.js"></script>
+    <script src="locales/en.js"></script>
     <script src="renderer.js"></script>
   </body>
 </html>

@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Jumpstart</title>
+    <style>
+      :root {
+        --bg: #16181d;
+        --panel: #1e2128;
+        --panel2: #23262e;
+        --border: #2e323c;
+        --text: #e6e8ec;
+        --muted: #8b909a;
+        --accent: #d97757;
+        --accent-dim: #3a2a23;
+        --green: #6bbf8a;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font:
+          13px/1.5 -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        padding: 18px 22px;
+      }
+      h1 {
+        font-size: 16px;
+        margin: 0 0 2px;
+        letter-spacing: 0.2px;
+      }
+      .sub {
+        color: var(--muted);
+        font-size: 12px;
+        margin-bottom: 16px;
+      }
+      .section {
+        margin-bottom: 22px;
+      }
+      .section-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+      .section-head h2 {
+        font-size: 13px;
+        margin: 0;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+      }
+      .count {
+        color: var(--muted);
+        font-size: 11px;
+      }
+      button {
+        background: var(--panel2);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 4px 10px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: var(--accent);
+      }
+      button.primary {
+        background: var(--accent-dim);
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 12px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        margin-bottom: 6px;
+      }
+      .row .main {
+        flex: 1;
+        min-width: 0;
+      }
+      .row .path {
+        font-family: ui-monospace, Menlo, monospace;
+        font-size: 12px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .row .meta {
+        color: var(--muted);
+        font-size: 11px;
+        margin-top: 1px;
+      }
+      .actions {
+        display: flex;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+      .pill {
+        font-size: 10px;
+        padding: 1px 6px;
+        border-radius: 4px;
+        background: var(--accent-dim);
+        color: var(--accent);
+      }
+      .missing {
+        color: #c97;
+      }
+      .toprow {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+      input {
+        background: var(--panel2);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        padding: 5px 8px;
+        font-size: 12px;
+      }
+      .form {
+        display: flex;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .form input.name {
+        width: 150px;
+      }
+      .form input.dir {
+        flex: 1;
+      }
+      .form input.cmd {
+        flex: 1;
+      }
+      .empty {
+        color: var(--muted);
+        font-size: 12px;
+        padding: 8px 2px;
+      }
+      .empty a {
+        color: var(--accent);
+        cursor: pointer;
+        text-decoration: none;
+      }
+      .empty a:hover {
+        text-decoration: underline;
+      }
+      .hist {
+        font-family: ui-monospace, Menlo, monospace;
+        font-size: 11px;
+        color: var(--muted);
+        padding: 3px 2px;
+      }
+      .hist b {
+        color: var(--text);
+        font-weight: 500;
+      }
+      .del {
+        color: var(--muted);
+        border: none;
+        background: none;
+        padding: 2px 6px;
+      }
+      .del:hover {
+        color: #c97;
+      }
+      .gitline {
+        color: var(--muted);
+        font-size: 11px;
+        margin-top: 3px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .repo {
+        color: var(--accent);
+        cursor: pointer;
+        font-family: ui-monospace, Menlo, monospace;
+        text-decoration: none;
+      }
+      .repo:hover {
+        text-decoration: underline;
+      }
+      .badge {
+        font-size: 10px;
+        padding: 1px 6px;
+        border-radius: 4px;
+        background: var(--panel2);
+        border: 1px solid var(--border);
+        color: var(--muted);
+      }
+      .badge.ok {
+        color: var(--green);
+        border-color: #2f5340;
+      }
+      .badge.warn {
+        color: #e0b65a;
+        border-color: #5a4a26;
+      }
+      select {
+        background: var(--panel2);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        padding: 5px 8px;
+        font-size: 12px;
+      }
+      .settings {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px 14px;
+        display: none;
+      }
+      .settings.open {
+        display: block;
+      }
+      .field {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .field > label {
+        width: 110px;
+        color: var(--muted);
+        flex-shrink: 0;
+      }
+      .field > input {
+        flex: 1;
+      }
+      #set-presets label {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin: 0 0 5px;
+        line-height: 1.4;
+      }
+      #set-presets input[type="checkbox"] {
+        flex: none;
+        width: 14px;
+        height: 14px;
+        margin: 0;
+      }
+      .hint {
+        color: var(--muted);
+        font-size: 11px;
+        margin: 2px 0 8px 118px;
+        line-height: 1.6;
+      }
+      .hint code {
+        background: var(--panel2);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 0 4px;
+        font-size: 10px;
+      }
+      .iconbtn {
+        width: 30px;
+        height: 28px;
+        padding: 0;
+        font-size: 15px;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .about {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.7;
+      }
+      .about b {
+        color: var(--text);
+        font-weight: 500;
+      }
+      .about a {
+        color: var(--accent);
+        cursor: pointer;
+        text-decoration: none;
+      }
+      .about a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toprow">
+      <div>
+        <h1>⚡ Jumpstart</h1>
+        <div class="sub">
+          반복 업무를 클릭 한 번으로 — 터미널 런처 + Claude Code 대시보드
+        </div>
+      </div>
+      <div style="display: flex; gap: 6px">
+        <button id="refresh">새로고침</button>
+        <button id="toggle-settings" class="iconbtn" title="설정">⚙︎</button>
+      </div>
+    </div>
+
+    <div class="settings" id="settings">
+      <div class="field">
+        <label>화면 테마</label>
+        <select id="set-theme"></select>
+      </div>
+      <div class="field">
+        <label>터미널 앱</label>
+        <select id="set-terminal"></select>
+      </div>
+      <div class="field" id="field-tabby" style="display: none">
+        <label>Tabby 경로</label>
+        <input
+          id="set-tabby"
+          placeholder="/Applications/Tabby.app/Contents/MacOS/Tabby"
+        />
+      </div>
+      <div class="field" id="field-custom" style="display: none">
+        <label>커스텀 명령</label>
+        <input id="set-custom" placeholder="예: kitty {{script}}" />
+      </div>
+      <div class="hint" id="hint-custom" style="display: none">
+        새 터미널을 여는 명령을 입력하세요. 치환자:
+        <code>{{script}}</code> (cd+명령이 담긴 실행 스크립트 경로),
+        <code>{{dir}}</code>, <code>{{cmd}}</code>,
+        <code>{{shell}}</code>.<br />
+        예시 — kitty: <code>kitty {{script}}</code> · WezTerm:
+        <code>wezterm start -- {{script}}</code> · Alacritty:
+        <code>alacritty -e {{script}}</code>
+      </div>
+      <div class="field" style="align-items: flex-start">
+        <label>빠른 실행 도구</label>
+        <div id="set-presets" style="flex: 1"></div>
+      </div>
+      <div class="hint">
+        체크한 도구만 "빠른 실행"에 버튼으로 나옵니다. (회색 =이 PC에 미설치)
+      </div>
+      <div style="text-align: right">
+        <button class="primary" id="set-save">저장</button>
+      </div>
+      <div class="about" id="about"></div>
+    </div>
+
+    <div class="section" id="quick-section" style="display: none">
+      <div class="section-head">
+        <h2>빠른 실행</h2>
+        <span class="count" id="quick-count"></span>
+      </div>
+      <div id="quick"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>내 워크플로우</h2>
+        <span class="count" id="bm-count"></span>
+      </div>
+      <div id="bookmarks"></div>
+      <div class="form">
+        <input class="name" id="bm-name" placeholder="이름" />
+        <input
+          class="dir"
+          id="bm-dir"
+          placeholder="경로 (예: ~/Documents/proj)"
+        />
+        <input class="cmd" id="bm-cmd" placeholder="명령어 (비우면 셸만)" />
+        <button class="primary" id="bm-add">추가</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>Claude Code 디렉토리</h2>
+        <span class="count" id="proj-count"></span>
+      </div>
+      <div id="projects"></div>
+    </div>
+
+    <div class="section" id="frequent-section" style="display: none">
+      <div class="section-head">
+        <h2>자주 여는 곳</h2>
+        <span class="count" id="freq-count"></span>
+      </div>
+      <div id="frequent"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h2>최근 실행</h2></div>
+      <div id="history"></div>
+    </div>
+
+    <script src="renderer.js"></script>
+  </body>
+</html>

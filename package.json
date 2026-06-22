@@ -1,0 +1,37 @@
+{
+  "name": "jumpstart",
+  "productName": "Jumpstart",
+  "version": "0.1.0",
+  "description": "반복 업무를 클릭 한 번으로 — 터미널 런처 + Claude Code 디렉토리 대시보드 (macOS)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --dir",
+    "dmg": "electron-builder --mac",
+    "app": "npm run dist && rm -rf /Applications/Jumpstart.app && cp -R dist/mac-*/Jumpstart.app /Applications/ && echo '✅ /Applications/Jumpstart.app 설치 완료'"
+  },
+  "build": {
+    "appId": "co.kr.spectra.jumpstart",
+    "productName": "Jumpstart",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer.js",
+      "index.html",
+      "assets/icon.png",
+      "package.json"
+    ],
+    "mac": {
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.developer-tools",
+      "identity": null
+    }
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  }
+}
